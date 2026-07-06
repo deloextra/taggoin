@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Test lettura NFC</title>
+<style>
+  :root{
+    --blue:#007AFF;
+    --green:#34C759;
+    --red:#FF3B30;
+    --gray:#8E8E93;
+    --bg:#F2F2F7;
+    --card:#FFFFFF;
+    --text:#1C1C1E;
+    --text-secondary:#8E8E93;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
+    color:var(--text); display:flex; justify-content:center; align-items:center; padding:24px 16px;
+  }
+  .card{
+    width:100%; max-width:400px; background:var(--card); border-radius:20px;
+    padding:32px 24px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .icon-circle{
+    width:96px; height:96px; border-radius:50%; margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon-circle svg{width:44px; height:44px;}
+  .status-title{font-size:24px; font-weight:700; margin:0 0 8px;}
+  .status-sub{font-size:15px; color:var(--text-secondary); margin:0;}
+  .coin-id{
+    margin-top:20px; padding:10px 16px; background:var(--bg); border-radius:100px;
+    display:inline-block; font-size:14px; font-weight:600;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+const icons = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`
+};
+
+// Formato atteso: coin-001 ... coin-100 (modifica il range se necessario)
+const COIN_PATTERN = /^coin-(\d{3})$/;
+
+function render(){
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("c");
+  const app = document.getElementById("app");
+
+  const match = raw ? raw.match(COIN_PATTERN) : null;
+
+  if(match){
+    const num = parseInt(match[1], 10);
+    app.innerHTML = `
+      <div class="icon-circle" style="background:#E8F9EC;color:var(--green)">${icons.check}</div>
+      <p class="status-title">Moneta riconosciuta</p>
+      <p class="status-sub">Numero ${num} di 100</p>
+      <div class="coin-id">${raw}</div>
+    `;
+  }else{
+    app.innerHTML = `
+      <div class="icon-circle" style="background:#FFEAEA;color:var(--red)">${icons.x}</div>
+      <p class="status-title">Moneta non valida</p>
+      <p class="status-sub">${raw ? `ID non riconosciuto: "${raw}"` : "Nessun ID trovato nell'URL"}</p>
+    `;
+  }
+}
+
+render();
+</script>
+</body>
+</html>

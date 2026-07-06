@@ -262,7 +262,7 @@ function launchConfetti(){
   container.style.zIndex = "200";
   document.body.appendChild(container);
 
-  const count = 70;
+  const count = 90;
   for(let i=0;i<count;i++){
     const piece = document.createElement("div");
     piece.className = "confetti-piece";
@@ -271,68 +271,90 @@ function launchConfetti(){
     piece.style.width = size + "px";
     piece.style.height = (size*1.6) + "px";
     piece.style.background = colors[Math.floor(Math.random()*colors.length)];
-    piece.style.animationDuration = (1.8 + Math.random()*1.4) + "s";
-    piece.style.animationDelay = (Math.random()*0.35) + "s";
+    piece.style.animationDuration = (2.6 + Math.random()*1.8) + "s";
+    piece.style.animationDelay = (Math.random()*0.5) + "s";
     piece.style.opacity = String(0.75 + Math.random()*0.25);
     container.appendChild(piece);
   }
-  setTimeout(() => container.remove(), 3600);
+  setTimeout(() => container.remove(), 5200);
+}
+
+function showWelcomePopup(){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.zIndex = "250";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(255,149,0,0.15);color:var(--orange)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 2l2.6 6.6L21 10l-5 4.4L17.5 21 12 17.3 6.5 21 8 14.4 3 10l6.4-1.4z"/></svg>
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 8px">Complimenti!</p>
+      <p>Hai guadagnato una <strong>VirtualCoin</strong> che ti dà diritto a una partita gratis.</p>
+      <button class="btn btn-primary" id="welcomeOk">OK</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("welcomeOk").onclick = () => overlay.remove();
 }
 
 let coinTimerInterval = null;
 
 function renderCoinView(coinId){
   if(!COIN_PATTERN.test(coinId)){
-    app.innerHTML = `${backButtonHtml()}<div class="card coin-status">
+    app.innerHTML = `<div class="card coin-status">
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
       <p class="status-title">Moneta non riconosciuta</p>
       <p class="status-sub">Formato ID non valido.</p>
       <div class="coin-id">${coinId}</div>
     </div>`;
-    attachBackButton(goHome);
     return;
   }
 
   let coin = getCoin(coinId);
+  let isFirstActivation = false;
   if(!coin){
     coin = upsertCoin(coinId, {
       duration_minutes: 60,
       first_scan_at: new Date().toISOString(),
       custom_expires_at: null
     });
+    isFirstActivation = true;
   }else if(!coin.first_scan_at){
     coin = upsertCoin(coinId, { first_scan_at: new Date().toISOString() });
+    isFirstActivation = true;
   }
   coin.id = coinId;
-  drawCoinStatus(coin);
+  drawCoinStatus(coin, isFirstActivation);
 }
 
-function drawCoinStatus(coin){
+function drawCoinStatus(coin, isFirstActivation){
   if(coinTimerInterval) clearInterval(coinTimerInterval);
 
   const expiry = effectiveExpiry(coin);
   const now = new Date();
 
   if(!expiry || now >= expiry){
-    app.innerHTML = `${backButtonHtml()}<div class="card coin-status">
+    app.innerHTML = `<div class="card coin-status">
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
       <p class="status-title">Non più valida</p>
       <p class="status-sub">La validità di questa moneta è scaduta.</p>
       <div class="coin-id">${coin.id}</div>
     </div>`;
-    attachBackButton(goHome);
     return;
   }
 
-  app.innerHTML = `${backButtonHtml()}<div class="card coin-status">
+  app.innerHTML = `<div class="card coin-status">
     <div class="icon-circle" style="background:rgba(52,199,89,0.15);color:var(--green)">${icons.check}</div>
-    <p class="status-title">Letta correttamente</p>
+    <p class="status-sub" style="margin-bottom:2px">Ecco la tua moneta</p>
+    <p class="status-title">Attiva</p>
     <div class="timer" id="timerDisplay">--:--:--</div>
     <p class="status-sub" style="margin-top:0">tempo rimanente</p>
     <div class="coin-id">${coin.id}</div>
   </div>`;
-  attachBackButton(goHome);
-  launchConfetti();
+
+  if(isFirstActivation){
+    launchConfetti();
+    showWelcomePopup();
+  }
 
   const timerEl = document.getElementById("timerDisplay");
   const tick = () => {

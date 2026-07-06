@@ -3,79 +3,507 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Test lettura NFC</title>
+<title>NFC Coins</title>
 <style>
   :root{
     --blue:#007AFF;
     --green:#34C759;
     --red:#FF3B30;
+    --orange:#FF9500;
     --gray:#8E8E93;
     --bg:#F2F2F7;
     --card:#FFFFFF;
     --text:#1C1C1E;
     --text-secondary:#8E8E93;
+    --separator:#E5E5EA;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{
     margin:0; min-height:100vh; background:var(--bg);
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
-    color:var(--text); display:flex; justify-content:center; align-items:center; padding:24px 16px;
+    color:var(--text); display:flex; justify-content:center; padding:24px 16px;
   }
+  .wrap{width:100%; max-width:440px;}
   .card{
-    width:100%; max-width:400px; background:var(--card); border-radius:20px;
-    padding:32px 24px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    background:var(--card); border-radius:20px; padding:24px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:16px;
   }
+  input[type=text], input[type=password], input[type=number], input[type=datetime-local]{
+    width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--separator);
+    background:var(--bg); font-size:16px; color:var(--text); outline:none;
+    font-family:inherit; margin-bottom:10px;
+  }
+  input:focus{border-color:var(--blue);}
+  label.field-label{
+    font-size:13px; color:var(--text-secondary); font-weight:600;
+    margin:0 0 6px 4px; display:block;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:100px; padding:14px 22px; font-size:16px;
+    font-weight:600; cursor:pointer; width:100%; font-family:inherit;
+    transition:opacity .15s;
+  }
+  .btn:active{opacity:.7;}
+  .btn-primary{background:var(--blue); color:#fff;}
+  .btn-secondary{background:var(--bg); color:var(--blue);}
+  .btn-danger{background:#FFEAEA; color:var(--red);}
+  .btn-small{width:auto; padding:9px 16px; font-size:14px; border-radius:100px;}
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .btn-row .btn-small{flex:1; min-width:100px;}
+  .coin-status{text-align:center; padding:20px 0;}
   .icon-circle{
-    width:96px; height:96px; border-radius:50%; margin:0 auto 20px;
+    width:88px; height:88px; border-radius:50%; margin:0 auto 18px;
     display:flex; align-items:center; justify-content:center;
   }
-  .icon-circle svg{width:44px; height:44px;}
-  .status-title{font-size:24px; font-weight:700; margin:0 0 8px;}
-  .status-sub{font-size:15px; color:var(--text-secondary); margin:0;}
+  .icon-circle svg{width:40px; height:40px;}
+  .status-title{font-size:22px; font-weight:700; margin:0 0 6px;}
+  .status-sub{font-size:14px; color:var(--text-secondary); margin:0 0 20px;}
+  .timer{
+    font-size:44px; font-weight:700; font-variant-numeric:tabular-nums;
+    letter-spacing:1px; margin:8px 0;
+  }
   .coin-id{
-    margin-top:20px; padding:10px 16px; background:var(--bg); border-radius:100px;
-    display:inline-block; font-size:14px; font-weight:600;
+    font-size:12px; color:var(--text-secondary); margin-top:14px;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .badge{display:inline-block; padding:4px 10px; border-radius:100px; font-size:12px; font-weight:600;}
+  .badge-green{background:#E8F9EC; color:var(--green);}
+  .badge-red{background:#FFEAEA; color:var(--red);}
+  .badge-gray{background:var(--bg); color:var(--gray);}
+  h1{font-size:22px; margin:0 0 4px;}
+  .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+  .coin-row{background:var(--card); border-radius:16px; padding:16px; margin-bottom:10px;}
+  .coin-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; font-weight:600;}
+  .coin-row-label{font-size:13px; color:var(--text-secondary); margin-top:2px;}
+  .coin-row-meta{font-size:12px; color:var(--text-secondary); margin-top:8px; line-height:1.6;}
+  .hidden{display:none !important;}
+  .loading{text-align:center; color:var(--text-secondary); padding:40px 0; font-size:14px;}
+  .error-text{color:var(--red); font-size:13px; margin-top:6px;}
+  .inline-panel{margin-top:12px; padding-top:12px; border-top:1px solid var(--separator);}
+  .top-actions{display:flex; gap:8px; margin-bottom:16px;}
+  .top-actions .btn{width:auto; flex:1;}
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-box{background:var(--card); border-radius:20px; padding:22px; width:100%; max-width:340px; text-align:center;}
+  .modal-box p{font-size:15px; color:var(--text-secondary); margin:8px 0 20px;}
+  .notice{
+    background:#FFF4E5; color:var(--orange); font-size:12px; padding:10px 14px;
+    border-radius:12px; margin-bottom:16px; text-align:center;
   }
 </style>
 </head>
 <body>
-<div class="card" id="app"></div>
+<div class="wrap" id="app">
+  <div class="loading">Caricamento…</div>
+</div>
 
 <script>
-const icons = {
-  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
-  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`
-};
+/* ============================================================
+   CONFIGURAZIONE
+   ============================================================ */
+// Login admin temporaneo (verrà sostituito da Supabase Auth)
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "admin";
 
-// Formato atteso: coin-001 ... coin-100 (modifica il range se necessario)
-const COIN_PATTERN = /^coin-(\d{3})$/;
+const STORAGE_KEY = "nfc_coins_data";
+const app = document.getElementById("app");
 
-function render(){
-  const params = new URLSearchParams(window.location.search);
-  const raw = params.get("c");
-  const app = document.getElementById("app");
-
-  const match = raw ? raw.match(COIN_PATTERN) : null;
-
-  if(match){
-    const num = parseInt(match[1], 10);
-    app.innerHTML = `
-      <div class="icon-circle" style="background:#E8F9EC;color:var(--green)">${icons.check}</div>
-      <p class="status-title">Moneta riconosciuta</p>
-      <p class="status-sub">Numero ${num} di 100</p>
-      <div class="coin-id">${raw}</div>
-    `;
-  }else{
-    app.innerHTML = `
-      <div class="icon-circle" style="background:#FFEAEA;color:var(--red)">${icons.x}</div>
-      <p class="status-title">Moneta non valida</p>
-      <p class="status-sub">${raw ? `ID non riconosciuto: "${raw}"` : "Nessun ID trovato nell'URL"}</p>
-    `;
+/* ============================================================
+   STORAGE LOCALE (sostituisce Supabase per ora)
+   Struttura: { "coin-001": { label, duration_minutes, first_scan_at, custom_expires_at }, ... }
+   ============================================================ */
+function loadAllCoins(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  }catch(e){
+    return {};
   }
 }
 
-render();
+function saveAllCoins(data){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function getCoin(id){
+  const all = loadAllCoins();
+  return all[id] || null;
+}
+
+function upsertCoin(id, fields){
+  const all = loadAllCoins();
+  all[id] = { ...(all[id] || {}), ...fields };
+  saveAllCoins(all);
+  return all[id];
+}
+
+function deleteCoin(id){
+  const all = loadAllCoins();
+  delete all[id];
+  saveAllCoins(all);
+}
+
+/* ============================================================
+   AUTH TEMPORANEA (admin/admin, solo client-side)
+   ============================================================ */
+function isLoggedIn(){
+  return sessionStorage.getItem("nfc_admin_logged") === "1";
+}
+function login(user, pass){
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    sessionStorage.setItem("nfc_admin_logged", "1");
+    return true;
+  }
+  return false;
+}
+function logout(){
+  sessionStorage.removeItem("nfc_admin_logged");
+  renderAdmin();
+}
+
+/* ============================================================
+   ICONE SVG
+   ============================================================ */
+const icons = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>`
+};
+
+/* ============================================================
+   LOGICA SCADENZA
+   ============================================================ */
+const COIN_PATTERN = /^coin-(\d{3})$/;
+
+function effectiveExpiry(coin){
+  if(coin.custom_expires_at) return new Date(coin.custom_expires_at);
+  if(coin.first_scan_at){
+    const d = new Date(coin.first_scan_at);
+    d.setMinutes(d.getMinutes() + (coin.duration_minutes || 60));
+    return d;
+  }
+  return null;
+}
+
+function formatDuration(ms){
+  if(ms <= 0) return "00:00:00";
+  const totalSec = Math.floor(ms/1000);
+  const h = String(Math.floor(totalSec/3600)).padStart(2,"0");
+  const m = String(Math.floor((totalSec%3600)/60)).padStart(2,"0");
+  const s = String(totalSec%60).padStart(2,"0");
+  return `${h}:${m}:${s}`;
+}
+
+/* ============================================================
+   VISTA PUBBLICA — pagina moneta
+   ============================================================ */
+let coinTimerInterval = null;
+
+function renderCoinView(coinId){
+  if(!COIN_PATTERN.test(coinId)){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:#FFEAEA;color:var(--red)">${icons.x}</div>
+      <p class="status-title">Moneta non riconosciuta</p>
+      <p class="status-sub">Formato ID non valido.</p>
+      <div class="coin-id">${coinId}</div>
+    </div>`;
+    return;
+  }
+
+  let coin = getCoin(coinId);
+
+  if(!coin){
+    // Prima volta assoluta: la creiamo con durata di default 60 minuti
+    coin = upsertCoin(coinId, {
+      duration_minutes: 60,
+      first_scan_at: new Date().toISOString(),
+      custom_expires_at: null
+    });
+  }else if(!coin.first_scan_at){
+    coin = upsertCoin(coinId, { first_scan_at: new Date().toISOString() });
+  }
+
+  drawCoinStatus(coin);
+}
+
+function drawCoinStatus(coin){
+  if(coinTimerInterval) clearInterval(coinTimerInterval);
+
+  const expiry = effectiveExpiry(coin);
+  const now = new Date();
+  const label = coin.label || coin.id;
+
+  if(!expiry || now >= expiry){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:#FFEAEA;color:var(--red)">${icons.x}</div>
+      <p class="status-title">Non più valida</p>
+      <p class="status-sub">La validità è scaduta.</p>
+      <div class="coin-id">${coin.id || ""}</div>
+    </div>`;
+    return;
+  }
+
+  app.innerHTML = `<div class="card coin-status">
+    <div class="icon-circle" style="background:#E8F9EC;color:var(--green)">${icons.check}</div>
+    <p class="status-title">Attiva</p>
+    <p class="status-sub">${label}</p>
+    <div class="timer" id="timerDisplay">--:--:--</div>
+    <p class="status-sub" style="margin-top:0">tempo rimanente</p>
+    <div class="coin-id">${coin.id || ""}</div>
+  </div>`;
+
+  const timerEl = document.getElementById("timerDisplay");
+  const tick = () => {
+    const diff = expiry - new Date();
+    if(diff <= 0){
+      clearInterval(coinTimerInterval);
+      drawCoinStatus(coin);
+      return;
+    }
+    timerEl.textContent = formatDuration(diff);
+  };
+  tick();
+  coinTimerInterval = setInterval(tick, 1000);
+}
+
+/* ============================================================
+   VISTA ADMIN
+   ============================================================ */
+function renderAdmin(){
+  if(!isLoggedIn()){
+    app.innerHTML = `
+      <div class="notice">Login temporaneo (admin/admin) — verrà sostituito da un accesso reale con Supabase.</div>
+      <div class="card">
+        <h1>Accesso admin</h1>
+        <label class="field-label">Username</label>
+        <input type="text" id="loginUser" autocomplete="username">
+        <label class="field-label">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password">
+        <button class="btn btn-primary" id="loginBtn">Accedi</button>
+        <div class="error-text hidden" id="loginError"></div>
+      </div>`;
+    document.getElementById("loginBtn").onclick = () => {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      const errEl = document.getElementById("loginError");
+      if(login(user, pass)){
+        renderAdmin();
+      }else{
+        errEl.textContent = "Credenziali non valide.";
+        errEl.classList.remove("hidden");
+      }
+    };
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="notice">Dati salvati solo su questo browser (localStorage) — versione temporanea in attesa di Supabase.</div>
+    <div class="admin-header">
+      <h1>Monete NFC</h1>
+      <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="addCoinBtn">+ Nuova moneta</button>
+    </div>
+    <div id="addCoinPanel" class="card hidden"></div>
+    <div id="coinList"></div>
+  `;
+
+  document.getElementById("logoutBtn").onclick = logout;
+  document.getElementById("addCoinBtn").onclick = toggleAddCoinPanel;
+
+  loadCoinList();
+}
+
+function toggleAddCoinPanel(){
+  const panel = document.getElementById("addCoinPanel");
+  const isHidden = panel.classList.contains("hidden");
+  if(!isHidden){ panel.classList.add("hidden"); return; }
+
+  panel.classList.remove("hidden");
+  panel.innerHTML = `
+    <label class="field-label">ID moneta (es. coin-001)</label>
+    <input type="text" id="newCoinId">
+    <label class="field-label">Etichetta (facoltativa)</label>
+    <input type="text" id="newCoinLabel">
+    <label class="field-label">Durata validità (minuti)</label>
+    <input type="number" id="newCoinDuration" value="60">
+    <button class="btn btn-primary" id="saveCoinBtn">Crea moneta</button>
+    <div class="error-text hidden" id="newCoinError"></div>
+  `;
+  document.getElementById("saveCoinBtn").onclick = () => {
+    const id = document.getElementById("newCoinId").value.trim();
+    const label = document.getElementById("newCoinLabel").value.trim();
+    const duration = parseInt(document.getElementById("newCoinDuration").value, 10) || 60;
+    const errEl = document.getElementById("newCoinError");
+    errEl.classList.add("hidden");
+
+    if(!COIN_PATTERN.test(id)){
+      errEl.textContent = 'ID non valido. Usa il formato "coin-001".';
+      errEl.classList.remove("hidden");
+      return;
+    }
+    if(getCoin(id)){
+      errEl.textContent = "Esiste già una moneta con questo ID.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    upsertCoin(id, {
+      label: label || null,
+      duration_minutes: duration,
+      first_scan_at: null,
+      custom_expires_at: null
+    });
+    panel.classList.add("hidden");
+    loadCoinList();
+  };
+}
+
+function loadCoinList(){
+  const listEl = document.getElementById("coinList");
+  const all = loadAllCoins();
+  const ids = Object.keys(all).sort();
+
+  if(!ids.length){
+    listEl.innerHTML = `<div class="loading">Nessuna moneta registrata.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = ids.map(id => coinRowHtml(id, all[id])).join("");
+
+  ids.forEach(id => {
+    const row = document.getElementById(`row-${cssId(id)}`);
+    row.querySelector(".btn-reset").onclick = () => handleReset(id);
+    row.querySelector(".btn-move").onclick = () => toggleMovePanel(id);
+    row.querySelector(".btn-expire").onclick = () => handleExpireNow(id);
+    row.querySelector(".btn-delete").onclick = () => handleDelete(id);
+  });
+}
+
+function cssId(id){ return id.replace(/[^a-zA-Z0-9_-]/g, "_"); }
+
+function statusBadge(coin){
+  const expiry = effectiveExpiry(coin);
+  if(!coin.first_scan_at) return `<span class="badge badge-gray">Mai usata</span>`;
+  if(expiry && new Date() < expiry) return `<span class="badge badge-green">Attiva</span>`;
+  return `<span class="badge badge-red">Scaduta</span>`;
+}
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("it-IT", { dateStyle:"short", timeStyle:"short" });
+}
+
+function coinRowHtml(id, coin){
+  const expiry = effectiveExpiry(coin);
+  return `
+  <div class="coin-row" id="row-${cssId(id)}">
+    <div class="coin-row-top">
+      <div>
+        <div class="coin-row-id">${id}</div>
+        ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
+      </div>
+      ${statusBadge(coin)}
+    </div>
+    <div class="coin-row-meta">
+      Primo utilizzo: ${fmtDate(coin.first_scan_at)}<br>
+      Scadenza: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${coin.duration_minutes || 60} min
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+      <button class="btn btn-secondary btn-small btn-move">Sposta scadenza</button>
+      <button class="btn btn-secondary btn-small btn-expire">Disattiva ora</button>
+      <button class="btn btn-danger btn-small btn-delete">Elimina</button>
+    </div>
+    <div class="inline-panel hidden" id="move-${cssId(id)}"></div>
+  </div>`;
+}
+
+function handleReset(id){
+  confirmAction(`Azzerare "${id}"? Tornerà riutilizzabile da zero.`, () => {
+    upsertCoin(id, { first_scan_at: null, custom_expires_at: null });
+    loadCoinList();
+  });
+}
+
+function handleExpireNow(id){
+  confirmAction(`Disattivare subito "${id}"?`, () => {
+    upsertCoin(id, { custom_expires_at: new Date().toISOString() });
+    loadCoinList();
+  });
+}
+
+function handleDelete(id){
+  confirmAction(`Eliminare definitivamente "${id}"? Azione irreversibile.`, () => {
+    deleteCoin(id);
+    loadCoinList();
+  });
+}
+
+function toggleMovePanel(id){
+  const panel = document.getElementById(`move-${cssId(id)}`);
+  const isHidden = panel.classList.contains("hidden");
+  if(!isHidden){ panel.classList.add("hidden"); return; }
+  panel.classList.remove("hidden");
+  panel.innerHTML = `
+    <label class="field-label">Nuova scadenza</label>
+    <input type="datetime-local" id="moveInput-${cssId(id)}">
+    <button class="btn btn-primary btn-small" id="moveSave-${cssId(id)}">Salva nuova scadenza</button>
+  `;
+  document.getElementById(`moveSave-${cssId(id)}`).onclick = () => {
+    const val = document.getElementById(`moveInput-${cssId(id)}`).value;
+    if(!val) return;
+    upsertCoin(id, { custom_expires_at: new Date(val).toISOString() });
+    loadCoinList();
+  };
+}
+
+/* ============================================================
+   MODALE DI CONFERMA
+   ============================================================ */
+function confirmAction(message, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>${message}</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary btn-small" id="modalCancel">Annulla</button>
+        <button class="btn btn-danger btn-small" id="modalConfirm">Conferma</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  document.getElementById("modalConfirm").onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+(function init(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.has("admin")){
+    renderAdmin();
+  }else if(params.has("c")){
+    renderCoinView(params.get("c"));
+  }else{
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:var(--bg);color:var(--gray)">${icons.alert}</div>
+      <p class="status-title">Nessuna moneta</p>
+      <p class="status-sub">Apri questa pagina passando un tag NFC, oppure entra nel pannello di gestione.</p>
+      <button class="btn btn-primary" id="goAdminBtn">Vai al pannello admin</button>
+    </div>`;
+    document.getElementById("goAdminBtn").onclick = () => {
+      window.location.search = "?admin=1";
+    };
+  }
+})();
 </script>
 </body>
 </html>

@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>NFC Coins</title>
 <style>
   :root{
@@ -199,40 +202,99 @@
 </div>
 
 <script>
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "admin";
-const STORAGE_KEY = "nfc_coins_data";
+const SUPABASE_URL = "https://uwethdprcasmnlnzeodo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j5klwLreYU47Qxi6f6QIBw_oFeSdKcf";
+const TABLE = "nfc_coins";
 const app = document.getElementById("app");
 
-function loadAllCoins(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch(e){ return {}; }
-}
-function saveAllCoins(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-function getCoin(id){ return loadAllCoins()[id] || null; }
-function upsertCoin(id, fields){
-  const all = loadAllCoins();
-  all[id] = { ...(all[id] || {}), ...fields };
-  saveAllCoins(all);
-  return all[id];
-}
-function deleteCoin(id){
-  const all = loadAllCoins();
-  delete all[id];
-  saveAllCoins(all);
+function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
+function isLoggedIn(){ return !!getAccessToken(); }
+
+function authHeaders(){
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Content-Type": "application/json"
+  };
+  const token = getAccessToken();
+  if(token){
+    headers["Authorization"] = "Bearer " + token;
+  }
+  return headers;
 }
 
-function isLoggedIn(){ return sessionStorage.getItem("nfc_admin_logged") === "1"; }
-function login(user, pass){
-  if(user === ADMIN_USER && pass === ADMIN_PASS){
-    sessionStorage.setItem("nfc_admin_logged", "1");
-    return true;
-  }
-  return false;
+async function login(email, password){
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description || data.msg || "Credenziali non valide");
+  sessionStorage.setItem("vc_access_token", data.access_token);
+  sessionStorage.setItem("vc_refresh_token", data.refresh_token);
 }
+
 function logout(){
-  sessionStorage.removeItem("nfc_admin_logged");
+  sessionStorage.removeItem("vc_access_token");
+  sessionStorage.removeItem("vc_refresh_token");
   goHome();
+}
+
+async function sbSelectCoin(id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: authHeaders() });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+async function sbSelectAllCoins(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders() });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  return res.json();
+}
+async function sbInsertCoin(id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify({ id })
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    const e = new Error(err.message || "Errore creazione");
+    e.code = err.code;
+    throw e;
+  }
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbInsertCoinFull(fields){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify(fields)
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Errore creazione");
+  }
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbUpdateCoin(id, fields){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify(fields)
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento");
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbDeleteCoin(id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: authHeaders()
+  });
+  if(!res.ok) throw new Error("Errore eliminazione");
 }
 
 function goHome(){ window.location.search = ""; }
@@ -309,7 +371,7 @@ function showWelcomePopup(){
   document.getElementById("welcomeOk").onclick = () => overlay.remove();
 }
 
-function renderCoinView(coinId){
+async function renderCoinView(coinId){
   if(!COIN_PATTERN.test(coinId)){
     app.innerHTML = `<div class="card coin-status">
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
@@ -320,29 +382,51 @@ function renderCoinView(coinId){
     return;
   }
 
-  let coin = getCoin(coinId);
-  let isFirstActivation = false;
-  if(!coin){
-    const start = new Date();
-    const end = new Date(start);
-    end.setDate(end.getDate() + 60);
-    coin = upsertCoin(coinId, {
-      duration_days: 60,
-      first_scan_at: start.toISOString(),
-      expires_at: end.toISOString()
-    });
-    isFirstActivation = true;
-  }else if(!coin.first_scan_at){
-    const start = new Date();
-    const end = new Date(start);
-    end.setDate(end.getDate() + (coin.duration_days || 60));
-    coin = upsertCoin(coinId, {
-      first_scan_at: start.toISOString(),
-      expires_at: end.toISOString()
-    });
-    isFirstActivation = true;
+  app.innerHTML = `<div class="loading">Verifica in corso…</div>`;
+
+  let coin;
+  try{
+    coin = await sbSelectCoin(coinId);
+  }catch(e){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Errore di connessione</p>
+      <p class="status-sub">Impossibile contattare il server. Riprova.</p>
+    </div>`;
+    return;
   }
-  coin.id = coinId;
+
+  let isFirstActivation = false;
+
+  if(!coin){
+    try{
+      coin = await sbInsertCoin(coinId);
+      isFirstActivation = true;
+    }catch(e){
+      coin = await sbSelectCoin(coinId).catch(() => null);
+      if(!coin){
+        app.innerHTML = `<div class="card coin-status">
+          <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+          <p class="status-title">Errore</p>
+          <p class="status-sub">Non è stato possibile registrare questa VirtualCoin.</p>
+        </div>`;
+        return;
+      }
+    }
+  }else if(!coin.first_scan_at){
+    try{
+      coin = await sbUpdateCoin(coinId, { first_scan_at: new Date().toISOString() });
+      isFirstActivation = true;
+    }catch(e){
+      app.innerHTML = `<div class="card coin-status">
+        <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+        <p class="status-title">Errore</p>
+        <p class="status-sub">Non è stato possibile attivare questa VirtualCoin.</p>
+      </div>`;
+      return;
+    }
+  }
+
   drawCoinStatus(coin, isFirstActivation);
 }
 
@@ -391,24 +475,28 @@ function renderAdmin(){
   if(!isLoggedIn()){
     app.innerHTML = `
       <p class="brand-title">VIRTUAL COIN</p>
-      <div class="notice">Login temporaneo (admin/admin) — verrà sostituito da un accesso reale con Supabase.</div>
       <div class="card">
         <h1>Accesso admin</h1>
-        <label class="field-label">Username</label>
+        <label class="field-label">Email</label>
         <input type="text" id="loginUser" autocomplete="username">
         <label class="field-label">Password</label>
         <input type="password" id="loginPass" autocomplete="current-password">
         <button class="btn btn-primary" id="loginBtn">Accedi</button>
         <div class="error-text hidden" id="loginError"></div>
       </div>`;
-    document.getElementById("loginBtn").onclick = () => {
+    document.getElementById("loginBtn").onclick = async () => {
       const user = document.getElementById("loginUser").value.trim();
       const pass = document.getElementById("loginPass").value;
       const errEl = document.getElementById("loginError");
-      if(login(user, pass)){
+      const btn = document.getElementById("loginBtn");
+      errEl.classList.add("hidden");
+      btn.textContent = "Accesso in corso…";
+      try{
+        await login(user, pass);
         renderAdmin();
-      }else{
-        errEl.textContent = "Credenziali non valide.";
+      }catch(e){
+        btn.textContent = "Accedi";
+        errEl.textContent = e.message;
         errEl.classList.remove("hidden");
       }
     };
@@ -416,7 +504,6 @@ function renderAdmin(){
   }
 
   app.innerHTML = `
-    <div class="notice">Dati salvati solo su questo browser (localStorage) — versione temporanea in attesa di Supabase.</div>
     <div class="admin-header">
       <h1>VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
@@ -429,25 +516,32 @@ function renderAdmin(){
   loadCoinList();
 }
 
-function loadCoinList(){
+async function loadCoinList(){
   const listEl = document.getElementById("coinList");
-  const all = loadAllCoins();
-  const ids = Object.keys(all).sort();
+  listEl.innerHTML = `<div class="loading">Caricamento…</div>`;
 
-  if(!ids.length){
+  let coins;
+  try{
+    coins = await sbSelectAllCoins();
+  }catch(e){
+    listEl.innerHTML = `<div class="error-text">Errore nel caricamento delle VirtualCoin.</div>`;
+    return;
+  }
+
+  if(!coins.length){
     listEl.innerHTML = `<div class="loading">Nessuna VirtualCoin registrata.</div>`;
     return;
   }
 
-  listEl.innerHTML = ids.map(id => coinRowHtml(id, all[id])).join("");
+  listEl.innerHTML = coins.map(c => coinRowHtml(c.id, c)).join("");
 
-  ids.forEach(id => {
-    const row = document.getElementById(`row-${cssId(id)}`);
-    row.querySelector(".btn-rename").onclick = () => toggleRenamePanel(id);
-    row.querySelector(".btn-reset").onclick = () => handleReset(id);
-    row.querySelector(".btn-move").onclick = () => toggleMovePanel(id);
-    row.querySelector(".btn-expire").onclick = () => handleExpireNow(id);
-    row.querySelector(".btn-delete").onclick = () => handleDelete(id);
+  coins.forEach(c => {
+    const row = document.getElementById(`row-${cssId(c.id)}`);
+    row.querySelector(".btn-rename").onclick = () => toggleRenamePanel(c.id);
+    row.querySelector(".btn-reset").onclick = () => handleReset(c.id);
+    row.querySelector(".btn-move").onclick = () => toggleMovePanel(c.id, c);
+    row.querySelector(".btn-expire").onclick = () => handleExpireNow(c.id);
+    row.querySelector(".btn-delete").onclick = () => handleDelete(c.id);
   });
 }
 
@@ -516,9 +610,10 @@ function toggleRenamePanel(id){
     <button class="btn btn-primary btn-small" id="renameSave-${cssId(id)}">Correggi ID</button>
     <div class="error-text hidden" id="renameError-${cssId(id)}"></div>
   `;
-  document.getElementById(`renameSave-${cssId(id)}`).onclick = () => {
+  document.getElementById(`renameSave-${cssId(id)}`).onclick = async () => {
     const newId = document.getElementById(`renameInput-${cssId(id)}`).value.trim();
     const errEl = document.getElementById(`renameError-${cssId(id)}`);
+    const btn = document.getElementById(`renameSave-${cssId(id)}`);
     errEl.classList.add("hidden");
 
     if(!COIN_PATTERN.test(newId)){
@@ -531,33 +626,48 @@ function toggleRenamePanel(id){
       errEl.classList.remove("hidden");
       return;
     }
-    if(getCoin(newId)){
-      errEl.textContent = "Esiste già una VirtualCoin con questo ID.";
+
+    btn.textContent = "Correzione in corso…";
+    try{
+      const existing = await sbSelectCoin(newId);
+      if(existing){
+        errEl.textContent = "Esiste già una VirtualCoin con questo ID.";
+        errEl.classList.remove("hidden");
+        btn.textContent = "Correggi ID";
+        return;
+      }
+      const data = await sbSelectCoin(id);
+      await sbInsertCoinFull({
+        id: newId,
+        label: data.label,
+        first_scan_at: data.first_scan_at,
+        expires_at: data.expires_at
+      });
+      await sbDeleteCoin(id);
+      loadCoinList();
+    }catch(e){
+      errEl.textContent = "Errore durante la correzione dell'ID.";
       errEl.classList.remove("hidden");
-      return;
+      btn.textContent = "Correggi ID";
     }
-    const data = getCoin(id);
-    upsertCoin(newId, data);
-    deleteCoin(id);
-    loadCoinList();
   };
 }
 
 function handleReset(id){
-  confirmAction(`Azzerare "${id}"? Tornerà riutilizzabile da zero.`, () => {
-    upsertCoin(id, { first_scan_at: null, expires_at: null });
+  confirmAction(`Azzerare "${id}"? Tornerà riutilizzabile da zero.`, async () => {
+    await sbUpdateCoin(id, { first_scan_at: null, expires_at: null });
     loadCoinList();
   });
 }
 function handleExpireNow(id){
-  confirmAction(`Disattivare subito "${id}"?`, () => {
-    upsertCoin(id, { expires_at: new Date().toISOString() });
+  confirmAction(`Disattivare subito "${id}"?`, async () => {
+    await sbUpdateCoin(id, { expires_at: new Date().toISOString() });
     loadCoinList();
   });
 }
 function handleDelete(id){
-  confirmAction(`Eliminare definitivamente "${id}"? Azione irreversibile.`, () => {
-    deleteCoin(id);
+  confirmAction(`Eliminare definitivamente "${id}"? Azione irreversibile.`, async () => {
+    await sbDeleteCoin(id);
     loadCoinList();
   });
 }
@@ -568,17 +678,16 @@ function toDatetimeLocalValue(date){
   return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function toggleMovePanel(id){
+function toggleMovePanel(id, coin){
   const panel = document.getElementById(`move-${cssId(id)}`);
   const isHidden = panel.classList.contains("hidden");
   if(!isHidden){ panel.classList.add("hidden"); return; }
   panel.classList.remove("hidden");
 
-  const coin = getCoin(id);
   const currentStart = coin.first_scan_at ? new Date(coin.first_scan_at) : new Date();
   const currentExpiry = effectiveExpiry(coin) || (() => {
     const d = new Date(currentStart);
-    d.setDate(d.getDate() + (coin.duration_days || 60));
+    d.setDate(d.getDate() + 60);
     return d;
   })();
 
@@ -605,13 +714,13 @@ function toggleMovePanel(id){
     endInput.value = toDatetimeLocalValue(newEnd);
   });
 
-  document.getElementById(`moveSave-${cssId(id)}`).onclick = () => {
+  document.getElementById(`moveSave-${cssId(id)}`).onclick = async () => {
     const startVal = startInput.value;
     const endVal = endInput.value;
     const fields = {};
     if(startVal) fields.first_scan_at = new Date(startVal).toISOString();
     if(endVal) fields.expires_at = new Date(endVal).toISOString();
-    upsertCoin(id, fields);
+    await sbUpdateCoin(id, fields);
     loadCoinList();
   };
 }

@@ -204,6 +204,21 @@
     border:1px solid rgba(218,115,158,0.25);
   }
 
+  /* ---------- layout desktop: schede monete a griglia ---------- */
+  @media (min-width: 820px){
+    .wrap{max-width:960px;}
+    .wrap > .admin-header, .wrap > .card, .wrap > .top-actions{
+      max-width:480px; margin-left:auto; margin-right:auto;
+    }
+    #coinList{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+      gap:16px;
+      align-items:start;
+    }
+    #coinList .coin-row{margin-bottom:0;}
+  }
+
   /* ---------- segmented control ---------- */
   .segmented{
     display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
@@ -295,6 +310,12 @@ async function sbSelectAllCoins(){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders() });
   if(!res.ok) throw new Error("Errore lettura dati");
   return res.json();
+}
+async function sbHasActiveCoins(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: authHeaders() });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows.length > 0;
 }
 async function sbInsertCoin(id, extraFields = {}){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
@@ -428,9 +449,8 @@ function launchConfetti(){
   container.style.zIndex = "9999";
   document.body.appendChild(container);
 
-  const originX = window.innerWidth / 2;
-  const originY = -10;
-  const count = 90;
+  const count = 80;
+  let maxTotalTime = 0;
 
   for(let i = 0; i < count; i++){
     const piece = document.createElement("div");
@@ -439,34 +459,35 @@ function launchConfetti(){
     piece.style.width = size + "px";
     piece.style.height = (size * 1.6) + "px";
     piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.left = originX + "px";
-    piece.style.top = originY + "px";
+    piece.style.left = (Math.random() * 100) + "vw";
+    piece.style.top = "-20px";
     container.appendChild(piece);
 
-    // Angolo di scoppio: verso il basso e ai lati, come una cascata dalla cima
-    const angle = Math.random() * Math.PI; // tra 0° e 180° (verso il basso)
-    const burstDistance = 60 + Math.random() * 160;
-    const burstX = Math.cos(angle) * burstDistance;
-    const burstY = Math.sin(angle) * burstDistance * 0.6;
-
-    const fallDistance = window.innerHeight * (0.9 + Math.random() * 0.4);
-    const driftX = (Math.random() - 0.5) * 200;
-    const duration = 2600 + Math.random() * 1800;
-    const rotation = 360 + Math.random() * 720;
+    // Caduta naturale: leggero ondeggiamento laterale invece di un tragitto rettilineo,
+    // come farebbe un vero coriandolo cadendo nell'aria.
+    const fallDistance = window.innerHeight + 60;
+    const swayAmount = 30 + Math.random() * 50;
+    const swayDirection = Math.random() < 0.5 ? 1 : -1;
+    const rotation = (Math.random() < 0.5 ? 1 : -1) * (280 + Math.random() * 400);
+    const duration = 3200 + Math.random() * 2200;
+    const delay = Math.random() * 900;
 
     piece.animate([
-      { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1 },
-      { transform: `translate(${burstX}px, ${burstY}px) rotate(${rotation * 0.3}deg)`, opacity: 1, offset: 0.25 },
-      { transform: `translate(${burstX + driftX}px, ${fallDistance}px) rotate(${rotation}deg)`, opacity: 0.85 }
+      { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1, offset: 0 },
+      { transform: `translate(${swayDirection * swayAmount}px, ${fallDistance * 0.35}px) rotate(${rotation * 0.3}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${-swayDirection * swayAmount * 0.6}px, ${fallDistance * 0.7}px) rotate(${rotation * 0.7}deg)`, opacity: 1, offset: 0.7 },
+      { transform: `translate(${swayDirection * swayAmount * 0.3}px, ${fallDistance}px) rotate(${rotation}deg)`, opacity: 0, offset: 1 }
     ], {
       duration,
-      delay: Math.random() * 200,
-      easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+      delay,
+      easing: "ease-in",
       fill: "forwards"
     });
+
+    maxTotalTime = Math.max(maxTotalTime, duration + delay);
   }
 
-  setTimeout(() => container.remove(), 5200);
+  setTimeout(() => container.remove(), maxTotalTime + 200);
 }
 
 function showWelcomePopup(){
@@ -626,7 +647,7 @@ function renderAdmin(){
 
   app.innerHTML = `
     <div class="admin-header">
-      <h1>VirtualCoin</h1>
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
     </div>
     <div class="card" style="text-align:center">
@@ -792,16 +813,21 @@ function openDurationPicker(currentValue, currentUnitPg){
       document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(selectedValue, pgUnit);
       overlay.remove();
 
-      showApplyScopeModal(async (applyToActive) => {
-        if(applyToActive){
-          try{
-            await sbApplyDurationToActiveCoins(selectedValue, pgUnit);
-          }catch(e){
-            alert("Errore durante l'aggiornamento delle monete già attive.");
+      const hasActive = await sbHasActiveCoins();
+      if(hasActive){
+        showApplyScopeModal(async (applyToActive) => {
+          if(applyToActive){
+            try{
+              await sbApplyDurationToActiveCoins(selectedValue, pgUnit);
+            }catch(e){
+              alert("Errore durante l'aggiornamento delle monete già attive.");
+            }
           }
-        }
+          loadCoinList();
+        });
+      }else{
         loadCoinList();
-      });
+      }
     }catch(e){
       btn.textContent = "Salva durata";
       alert("Errore durante il salvataggio.");
@@ -853,7 +879,6 @@ async function loadCoinList(){
     const row = document.getElementById(`row-${cssId(c.id)}`);
     row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
     row.querySelector(".btn-reset").onclick = () => handleReset(c);
-    row.querySelector(".btn-delete").onclick = () => handleDelete(c.id);
   });
 }
 
@@ -920,7 +945,6 @@ function coinRowHtml(id, coin){
     <div class="btn-row">
       <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
-      <button class="btn btn-danger btn-small btn-delete">Elimina</button>
     </div>
   </div>`;
 }
@@ -999,13 +1023,6 @@ function handleReset(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
   confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
     await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, session_code: generateSessionCode() });
-    loadCoinList();
-  });
-}
-
-function handleDelete(id){
-  confirmAction(`Eliminare definitivamente questa VirtualCoin? Azione irreversibile.`, async () => {
-    await sbDeleteCoin(id);
     loadCoinList();
   });
 }

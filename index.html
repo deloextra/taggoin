@@ -286,7 +286,8 @@ async function login(email, password){
   const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
+    cache: "no-store"
   });
   const data = await res.json();
   if(!res.ok) throw new Error(data.error_description || data.msg || "Credenziali non valide");
@@ -301,18 +302,18 @@ function logout(){
 }
 
 async function sbSelectCoin(id){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: authHeaders() });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: authHeaders(), cache: "no-store" });
   if(!res.ok) throw new Error("Errore lettura dati");
   const rows = await res.json();
   return rows[0] || null;
 }
 async function sbSelectAllCoins(){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders() });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders(), cache: "no-store" });
   if(!res.ok) throw new Error("Errore lettura dati");
   return res.json();
 }
 async function sbHasActiveCoins(){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: authHeaders() });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: authHeaders(), cache: "no-store" });
   if(!res.ok) throw new Error("Errore lettura dati");
   const rows = await res.json();
   return rows.length > 0;
@@ -321,7 +322,8 @@ async function sbInsertCoin(id, extraFields = {}){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
     method: "POST",
     headers: { ...authHeaders(), "Prefer": "return=representation" },
-    body: JSON.stringify({ id, ...extraFields })
+    body: JSON.stringify({ id, ...extraFields }),
+    cache: "no-store"
   });
   if(!res.ok){
     const err = await res.json().catch(() => ({}));
@@ -336,7 +338,8 @@ async function sbUpdateCoin(id, fields){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { ...authHeaders(), "Prefer": "return=representation" },
-    body: JSON.stringify(fields)
+    body: JSON.stringify(fields),
+    cache: "no-store"
   });
   if(!res.ok) throw new Error("Errore aggiornamento");
   const rows = await res.json();
@@ -345,14 +348,16 @@ async function sbUpdateCoin(id, fields){
 async function sbDeleteCoin(id){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: authHeaders()
+    headers: authHeaders(),
+    cache: "no-store"
   });
   if(!res.ok) throw new Error("Errore eliminazione");
 }
 
 async function sbGetSetting(key){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}&select=value`, {
-    headers: authHeaders()
+    headers: authHeaders(),
+    cache: "no-store"
   });
   if(!res.ok) throw new Error("Errore lettura impostazioni");
   const rows = await res.json();
@@ -362,7 +367,8 @@ async function sbSetSetting(key, value){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}`, {
     method: "PATCH",
     headers: { ...authHeaders(), "Prefer": "return=representation" },
-    body: JSON.stringify({ value: String(value) })
+    body: JSON.stringify({ value: String(value) }),
+    cache: "no-store"
   });
   if(!res.ok) throw new Error("Errore salvataggio impostazioni");
   return res.json();
@@ -372,7 +378,8 @@ async function sbApplyDurationToActiveCoins(value, unit){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/apply_duration_to_active_coins`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ p_value: value, p_unit: unit })
+    body: JSON.stringify({ p_value: value, p_unit: unit }),
+    cache: "no-store"
   });
   if(!res.ok) throw new Error("Errore aggiornamento monete già attive");
 }
@@ -897,11 +904,13 @@ function fmtDate(iso){
 }
 
 function derivedDurationLabel(coin){
-  if(coin.duration_value && coin.duration_unit){
-    const text = formatDurationDisplay(coin.duration_value, coin.duration_unit);
-    return coin.first_scan_at ? text : `${text} (non ancora attivata)`;
+  if(!coin.first_scan_at){
+    return `${formatDurationDisplay(currentDefaultValue, currentDefaultUnit)} (non ancora attivata)`;
   }
-  return coin.first_scan_at ? "—" : `${currentDefaultValue} ${UNIT_LABELS[currentDefaultUnit]?.plural || "giorni"} (non ancora attivata)`;
+  if(coin.duration_value && coin.duration_unit){
+    return formatDurationDisplay(coin.duration_value, coin.duration_unit);
+  }
+  return "—";
 }
 
 function generateSessionCode(){
@@ -1022,7 +1031,7 @@ function showGeneratedLinkPopup(code){
 function handleReset(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
   confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
-    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, session_code: generateSessionCode() });
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode() });
     loadCoinList();
   });
 }

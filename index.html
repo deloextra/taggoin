@@ -40,20 +40,27 @@
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
-  body{
-    margin:0; min-height:100vh;
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
-    color:var(--text); display:flex; justify-content:center;
-    padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+  html,body{
+    height:auto;
+    min-height:100%;
+    margin:0;
     background:
       radial-gradient(circle at 15% 10%, rgba(218,115,158,0.30), transparent 45%),
       radial-gradient(circle at 85% 15%, rgba(76,68,114,0.55), transparent 45%),
       radial-gradient(circle at 20% 90%, rgba(218,115,158,0.16), transparent 45%),
       radial-gradient(circle at 90% 85%, rgba(76,68,114,0.40), transparent 45%),
       linear-gradient(180deg, var(--purple), var(--purple-deep));
-    background-attachment:fixed;
+    background-repeat:no-repeat;
+    overscroll-behavior-y:none;
+  }
+  body{
+    margin:0; min-height:100dvh;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
+    color:var(--text); display:flex; justify-content:center;
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+    background:transparent;
     position:relative;
+    -webkit-overflow-scrolling:touch;
   }
   .wrap{width:100%; max-width:480px; position:relative;}
 
@@ -129,11 +136,11 @@
   .date-block{
     background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);
     border-radius:18px; padding:14px 18px; margin:18px 8px 14px; text-align:left;
-}
-  .date-row{display:flex; flex-direction:column; gap:4px; padding:9px 0; font-size:13px;}
+  }
+  .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; font-size:13.5px;}
   .date-row + .date-row{border-top:1px solid var(--separator);}
   .date-row span{color:var(--text-secondary);}
-  .date-row strong{font-weight:600; text-align:left; font-size:15px;}
+  .date-row strong{font-weight:600; text-align:right; font-size:13.5px;}
   .note-text{
     font-size:12px; color:var(--text-secondary); margin:0 0 4px; line-height:1.5;
   }
@@ -149,12 +156,7 @@
 
   /* ---------- coriandoli ---------- */
   .confetti-piece{
-    position:fixed; top:-16px; border-radius:2px; pointer-events:none;
-    animation:confetti-fall linear forwards;
-  }
-  @keyframes confetti-fall{
-    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
-    100%{ transform:translateY(115vh) rotate(720deg); opacity:0.85; }
+    position:fixed; border-radius:2px; pointer-events:none;
   }
 
   .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
@@ -165,11 +167,13 @@
   h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
   .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
   .coin-row{
-    background:var(--glass-fill); backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    background:var(--glass-fill); backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
     border:1px solid var(--glass-border);
     border-radius:24px; padding:20px; margin-bottom:14px;
     box-shadow:0 4px 16px rgba(31,38,135,0.08);
+    transform:translateZ(0);
+    will-change:transform;
   }
   .coin-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:18px; font-weight:700;}
@@ -412,21 +416,44 @@ function launchConfetti(){
   container.style.zIndex = "9999";
   document.body.appendChild(container);
 
+  const originX = window.innerWidth / 2;
+  const originY = window.innerHeight * 0.35;
   const count = 90;
-  for(let i=0;i<count;i++){
+
+  for(let i = 0; i < count; i++){
     const piece = document.createElement("div");
     piece.className = "confetti-piece";
-    piece.style.zIndex = "9999";
-    const size = 6 + Math.random()*7;
-    piece.style.left = (Math.random()*100) + "vw";
+    const size = 6 + Math.random() * 7;
     piece.style.width = size + "px";
-    piece.style.height = (size*1.6) + "px";
-    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
-    piece.style.animationDuration = (2.6 + Math.random()*1.8) + "s";
-    piece.style.animationDelay = (Math.random()*0.5) + "s";
-    piece.style.opacity = String(0.75 + Math.random()*0.25);
+    piece.style.height = (size * 1.6) + "px";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.left = originX + "px";
+    piece.style.top = originY + "px";
     container.appendChild(piece);
+
+    // Angolo di scoppio: verso l'alto e ai lati, come un vero botto centrale
+    const angle = (Math.random() * Math.PI) + Math.PI; // tra 180° e 360° (verso l'alto)
+    const burstDistance = 60 + Math.random() * 160;
+    const burstX = Math.cos(angle) * burstDistance;
+    const burstY = Math.sin(angle) * burstDistance * 0.6;
+
+    const fallDistance = window.innerHeight * (0.9 + Math.random() * 0.4);
+    const driftX = (Math.random() - 0.5) * 200;
+    const duration = 2600 + Math.random() * 1800;
+    const rotation = 360 + Math.random() * 720;
+
+    piece.animate([
+      { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1 },
+      { transform: `translate(${burstX}px, ${burstY}px) rotate(${rotation * 0.3}deg)`, opacity: 1, offset: 0.25 },
+      { transform: `translate(${burstX + driftX}px, ${fallDistance}px) rotate(${rotation}deg)`, opacity: 0.85 }
+    ], {
+      duration,
+      delay: Math.random() * 200,
+      easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+      fill: "forwards"
+    });
   }
+
   setTimeout(() => container.remove(), 5200);
 }
 

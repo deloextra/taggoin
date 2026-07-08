@@ -296,11 +296,11 @@ async function sbSelectAllCoins(){
   if(!res.ok) throw new Error("Errore lettura dati");
   return res.json();
 }
-async function sbInsertCoin(id){
+async function sbInsertCoin(id, extraFields = {}){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
     method: "POST",
     headers: { ...authHeaders(), "Prefer": "return=representation" },
-    body: JSON.stringify({ id })
+    body: JSON.stringify({ id, ...extraFields })
   });
   if(!res.ok){
     const err = await res.json().catch(() => ({}));
@@ -852,7 +852,7 @@ async function loadCoinList(){
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
     row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
-    row.querySelector(".btn-reset").onclick = () => handleReset(c.id);
+    row.querySelector(".btn-reset").onclick = () => handleReset(c);
     row.querySelector(".btn-delete").onclick = () => handleDelete(c.id);
   });
 }
@@ -877,6 +877,14 @@ function derivedDurationLabel(coin){
     return coin.first_scan_at ? text : `${text} (non ancora attivata)`;
   }
   return coin.first_scan_at ? "—" : `${currentDefaultValue} ${UNIT_LABELS[currentDefaultUnit]?.plural || "giorni"} (non ancora attivata)`;
+}
+
+function generateSessionCode(){
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return code;
 }
 
 function fakeDisplayCode(id){
@@ -931,7 +939,7 @@ async function handleCreateCoin(){
       if(!existing) break;
       attempts++;
     }
-    await sbInsertCoin(code);
+    await sbInsertCoin(code, { session_code: generateSessionCode() });
     showGeneratedLinkPopup(code);
     loadCoinList();
   }catch(e){
@@ -987,9 +995,10 @@ function showGeneratedLinkPopup(code){
   document.getElementById("closeLinkPopup").onclick = () => overlay.remove();
 }
 
-function handleReset(id){
-  confirmAction(`Azzerare "${id}"? Tornerà riutilizzabile da zero.`, async () => {
-    await sbUpdateCoin(id, { first_scan_at: null, expires_at: null, session_code: null });
+function handleReset(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, session_code: generateSessionCode() });
     loadCoinList();
   });
 }

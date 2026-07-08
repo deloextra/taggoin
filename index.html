@@ -41,9 +41,11 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
-    height:auto;
-    min-height:100%;
+    height:100%;
     margin:0;
+    overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
+    color:var(--text);
     background:
       radial-gradient(circle at 15% 10%, rgba(218,115,158,0.30), transparent 45%),
       radial-gradient(circle at 85% 15%, rgba(76,68,114,0.55), transparent 45%),
@@ -51,16 +53,15 @@
       radial-gradient(circle at 90% 85%, rgba(76,68,114,0.40), transparent 45%),
       linear-gradient(180deg, var(--purple), var(--purple-deep));
     background-repeat:no-repeat;
-    overscroll-behavior-y:none;
+    background-size:100% 100%;
   }
-  body{
-    margin:0; min-height:100dvh;
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
-    color:var(--text); display:flex; justify-content:center;
-    padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
-    background:transparent;
-    position:relative;
+  #scrollContainer{
+    position:absolute; inset:0;
+    overflow-y:auto;
     -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    display:flex; justify-content:center;
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
   }
   .wrap{width:100%; max-width:480px; position:relative;}
 
@@ -239,8 +240,10 @@
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <div class="loading">Caricamento…</div>
+<div id="scrollContainer">
+  <div class="wrap" id="app">
+    <div class="loading">Caricamento…</div>
+  </div>
 </div>
 
 <script>
@@ -548,7 +551,7 @@ function drawCoinStatus(coin, isFirstActivation){
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
       <p class="status-title">Scaduta</p>
       <p class="status-sub">La validità di questa VirtualCoin è terminata.</p>
-      <div class="coin-id">${coin.session_code || coin.id}</div>
+      <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
     </div>`;
     return;
   }
@@ -562,7 +565,7 @@ function drawCoinStatus(coin, isFirstActivation){
       <div class="date-row"><span>Scade il</span><strong>${fmtDateTime(expiry.toISOString())}</strong></div>
     </div>
     <p class="note-text">Dopo la data di scadenza la VirtualCoin non sarà più utilizzabile.</p>
-    <div class="coin-id">${coin.session_code || coin.id}</div>
+    <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
 
     <div class="section-divider"></div>
 
@@ -833,13 +836,28 @@ function derivedDurationLabel(coin){
   return `${coin.duration_days || 60} giorni (non ancora attivata)`;
 }
 
+function fakeDisplayCode(id){
+  // Codice puramente estetico, stabile ma non riconducibile all'ID reale.
+  // Serve solo a non mostrare mai l'ID vero nelle schede prima dell'attivazione.
+  let hash = 0;
+  for(let i = 0; i < id.length; i++){
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[hash % CODE_CHARSET.length];
+    hash = Math.floor(hash / CODE_CHARSET.length) + i * 97;
+  }
+  return code;
+}
+
 function coinRowHtml(id, coin){
   const expiry = effectiveExpiry(coin);
   return `
   <div class="coin-row" id="row-${cssId(id)}">
     <div class="coin-row-top">
       <div>
-        <div class="coin-row-id">${coin.session_code || id}</div>
+        <div class="coin-row-id">${coin.session_code || fakeDisplayCode(id)}</div>
         ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
       </div>
       ${statusBadge(coin)}

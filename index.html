@@ -9,17 +9,21 @@
 <title>NFC Coins</title>
 <style>
   :root{
-    --blue:#007AFF;
+    --purple:#322d4d;
+    --purple-deep:#241f39;
+    --purple-light:#4c4472;
+    --pink:#da739e;
+    --pink-dark:#c2597f;
+    --pink-soft:#e6a0bf;
     --green:#34C759;
     --red:#FF3B30;
-    --orange:#FF9500;
     --gray:#8E8E93;
-    --text:#1C1C1E;
-    --text-secondary:rgba(60,60,67,0.6);
-    --separator:rgba(60,60,67,0.15);
-    --glass-fill:rgba(255,255,255,0.55);
-    --glass-fill-strong:rgba(255,255,255,0.75);
-    --glass-border:rgba(255,255,255,0.65);
+    --text:#F4F0F8;
+    --text-secondary:rgba(244,240,248,0.62);
+    --separator:rgba(255,255,255,0.14);
+    --glass-fill:rgba(255,255,255,0.07);
+    --glass-fill-strong:rgba(255,255,255,0.13);
+    --glass-border:rgba(255,255,255,0.18);
   }
   @font-face{
     font-family: 'SpaceAge';
@@ -32,7 +36,7 @@
     font-family:'SpaceAge', -apple-system, sans-serif;
     font-size:30px; text-align:center; letter-spacing:2px;
     margin:0 0 20px; font-weight:400;
-    background:linear-gradient(135deg, var(--blue), #AF52DE);
+    background:linear-gradient(135deg, var(--pink), var(--purple-light));
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -43,11 +47,11 @@
     color:var(--text); display:flex; justify-content:center;
     padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
     background:
-      radial-gradient(circle at 15% 10%, rgba(0,122,255,0.35), transparent 45%),
-      radial-gradient(circle at 85% 15%, rgba(175,82,222,0.30), transparent 45%),
-      radial-gradient(circle at 20% 90%, rgba(52,199,89,0.22), transparent 45%),
-      radial-gradient(circle at 90% 85%, rgba(255,149,0,0.20), transparent 45%),
-      linear-gradient(180deg, #eef1f7, #e4e8f0);
+      radial-gradient(circle at 15% 10%, rgba(218,115,158,0.30), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(76,68,114,0.55), transparent 45%),
+      radial-gradient(circle at 20% 90%, rgba(218,115,158,0.16), transparent 45%),
+      radial-gradient(circle at 90% 85%, rgba(76,68,114,0.40), transparent 45%),
+      linear-gradient(180deg, var(--purple), var(--purple-deep));
     background-attachment:fixed;
     position:relative;
   }
@@ -64,11 +68,11 @@
   }
   input[type=text], input[type=password], input[type=number], input[type=datetime-local]{
     width:100%; padding:16px 18px; border-radius:16px; border:1px solid var(--separator);
-    background:rgba(255,255,255,0.6); backdrop-filter:blur(8px);
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(8px);
     font-size:17px; color:var(--text); outline:none;
     font-family:inherit; margin-bottom:12px;
   }
-  input:focus{border-color:var(--blue); background:rgba(255,255,255,0.85);}
+  input:focus{border-color:var(--pink); background:rgba(255,255,255,0.10);}
   label.field-label{
     font-size:14px; color:var(--text-secondary); font-weight:600;
     margin:0 0 6px 4px; display:block;
@@ -86,13 +90,13 @@
   .btn:active{transform:scale(0.97); opacity:.85;}
   .btn-compact{width:auto; padding:15px 32px;}
   .btn-primary{
-    background:linear-gradient(180deg, rgba(10,132,255,0.95), rgba(0,110,230,0.95));
-    color:#fff; box-shadow:0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark));
+    color:#fff; box-shadow:0 4px 14px rgba(218,115,158,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
   }
   .btn-secondary{
-    background:rgba(255,255,255,0.55); color:var(--blue);
-    border:1px solid rgba(255,255,255,0.7);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+    background:rgba(255,255,255,0.08); color:var(--pink-soft);
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
   }
   .btn-danger{
     background:rgba(255,59,48,0.15); color:var(--red);
@@ -108,7 +112,7 @@
     -webkit-backdrop-filter:blur(16px) saturate(180%);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     margin-bottom:18px; box-shadow:0 4px 14px rgba(31,38,135,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
-    color:var(--blue); transition:transform .12s;
+    color:var(--pink-soft); transition:transform .12s;
   }
   .back-btn:active{transform:scale(0.9);}
   .back-btn svg{width:20px; height:20px;}
@@ -123,7 +127,7 @@
   .status-title{font-size:28px; font-weight:700; margin:0 0 8px; letter-spacing:-0.4px;}
   .status-sub{font-size:15px; color:var(--text-secondary); margin:0 0 22px;}
   .date-block{
-    background:rgba(255,255,255,0.45); border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);
     border-radius:18px; padding:14px 18px; margin:18px 0 14px; text-align:left;
   }
   .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; font-size:13.5px;}
@@ -139,7 +143,7 @@
   .coin-id{
     font-size:13px; color:var(--text-secondary); margin-top:18px;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-    background:rgba(255,255,255,0.5); display:inline-block; padding:8px 16px; border-radius:100px;
+    background:rgba(255,255,255,0.07); display:inline-block; padding:8px 16px; border-radius:100px;
     border:1px solid var(--glass-border);
   }
 
@@ -156,7 +160,7 @@
   .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
   .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
   .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
-  .badge-gray{background:rgba(142,142,147,0.15); color:var(--gray);}
+  .badge-gray{background:rgba(255,255,255,0.10); color:var(--text-secondary);}
 
   h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
   .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
@@ -178,21 +182,55 @@
   .top-actions{display:flex; gap:8px; margin-bottom:16px;}
   .top-actions .btn{width:auto; flex:1;}
   .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.25); backdrop-filter:blur(4px);
+    position:fixed; inset:0; background:rgba(20,17,32,0.55); backdrop-filter:blur(6px);
     display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
   }
   .modal-box{
-    background:var(--glass-fill-strong); backdrop-filter:blur(28px) saturate(180%);
+    background:rgba(50,45,77,0.92); backdrop-filter:blur(28px) saturate(180%);
     -webkit-backdrop-filter:blur(28px) saturate(180%);
-    border:1px solid var(--glass-border);
-    border-radius:24px; padding:22px; width:100%; max-width:340px; text-align:center;
-    box-shadow:0 12px 40px rgba(31,38,135,0.20);
+    border:1px solid rgba(255,255,255,0.22);
+    border-radius:24px; padding:26px; width:100%; max-width:340px; text-align:center;
+    box-shadow:0 16px 48px rgba(0,0,0,0.45);
   }
-  .modal-box p{font-size:15px; color:var(--text-secondary); margin:8px 0 20px;}
+  .modal-box p{font-size:16px; color:var(--text); line-height:1.5; margin:8px 0 22px; font-weight:500;}
   .notice{
-    background:rgba(255,149,0,0.12); color:#B25E00; font-size:12px; padding:10px 14px;
+    background:rgba(218,115,158,0.12); color:var(--pink-soft); font-size:12px; padding:10px 14px;
     border-radius:14px; margin-bottom:16px; text-align:center;
-    border:1px solid rgba(255,149,0,0.2);
+    border:1px solid rgba(218,115,158,0.25);
+  }
+
+  /* ---------- segmented control ---------- */
+  .segmented{
+    display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
+    padding:4px; gap:4px; margin-bottom:18px;
+  }
+  .segmented button{
+    flex:1; padding:11px 6px; border:none; border-radius:11px; background:transparent;
+    color:var(--text-secondary); font-weight:600; font-size:14.5px; cursor:pointer;
+    font-family:inherit; transition:background .15s, color .15s;
+  }
+  .segmented button.active{
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark)); color:#fff;
+  }
+
+  /* ---------- drum picker ---------- */
+  .drum-wrapper{ position:relative; height:154px; margin-bottom:20px; }
+  .drum{
+    height:154px; overflow-y:scroll; scroll-snap-type:y mandatory;
+    -webkit-overflow-scrolling:touch; padding:55px 0;
+    scrollbar-width:none;
+  }
+  .drum::-webkit-scrollbar{ display:none; }
+  .drum-item{
+    height:44px; display:flex; align-items:center; justify-content:center;
+    scroll-snap-align:center; font-size:19px; color:var(--text-secondary);
+    font-variant-numeric:tabular-nums;
+  }
+  .drum-item.selected{ color:var(--text); font-weight:700; font-size:25px; }
+  .drum-highlight{
+    position:absolute; top:55px; left:0; right:0; height:44px;
+    border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05); border-radius:12px; pointer-events:none;
   }
 </style>
 </head>
@@ -282,6 +320,24 @@ async function sbDeleteCoin(id){
     headers: authHeaders()
   });
   if(!res.ok) throw new Error("Errore eliminazione");
+}
+
+async function sbGetSetting(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: authHeaders()
+  });
+  if(!res.ok) throw new Error("Errore lettura impostazioni");
+  const rows = await res.json();
+  return rows[0] ? rows[0].value : null;
+}
+async function sbSetSetting(key, value){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify({ value: String(value) })
+  });
+  if(!res.ok) throw new Error("Errore salvataggio impostazioni");
+  return res.json();
 }
 
 function goHome(){ window.location.search = ""; }
@@ -380,7 +436,7 @@ function showWelcomePopup(){
   overlay.style.zIndex = "250";
   overlay.innerHTML = `
     <div class="modal-box">
-      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(255,149,0,0.15);color:var(--orange)">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(218,115,158,0.18);color:var(--pink-soft)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 2l2.6 6.6L21 10l-5 4.4L17.5 21 12 17.3 6.5 21 8 14.4 3 10l6.4-1.4z"/></svg>
       </div>
       <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 8px">Complimenti!</p>
@@ -392,6 +448,12 @@ function showWelcomePopup(){
 }
 
 async function renderCoinView(coinId){
+  // Ripulisce subito la barra indirizzi: il codice serve solo un istante
+  // per identificare la moneta, poi spariscono dall'URL visibile.
+  if(window.history && window.history.replaceState){
+    window.history.replaceState(null, "", window.location.pathname);
+  }
+
   if(!isValidCoinFormat(coinId)){
     app.innerHTML = `<div class="card coin-status">
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
@@ -459,7 +521,7 @@ function drawCoinStatus(coin, isFirstActivation){
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
       <p class="status-title">Scaduta</p>
       <p class="status-sub">La validità di questa VirtualCoin è terminata.</p>
-      <div class="coin-id">${coin.id}</div>
+      <div class="coin-id">${coin.session_code || coin.id}</div>
     </div>`;
     return;
   }
@@ -473,7 +535,7 @@ function drawCoinStatus(coin, isFirstActivation){
       <div class="date-row"><span>Scade il</span><strong>${fmtDateTime(expiry.toISOString())}</strong></div>
     </div>
     <p class="note-text">Dopo la data di scadenza la VirtualCoin non sarà più utilizzabile.</p>
-    <div class="coin-id">${coin.id}</div>
+    <div class="coin-id">${coin.session_code || coin.id}</div>
 
     <div class="section-divider"></div>
 
@@ -528,6 +590,11 @@ function renderAdmin(){
       <h1>VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
     </div>
+    <div class="card" style="text-align:center">
+      <label class="field-label" style="text-align:center">Durata validità di default</label>
+      <p id="currentDurationDisplay" style="font-size:24px;font-weight:700;color:var(--text);margin:4px 0 18px">…</p>
+      <button class="btn btn-secondary btn-compact" id="changeDurationBtn">Cambia durata</button>
+    </div>
     <div class="top-actions">
       <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
     </div>
@@ -537,7 +604,156 @@ function renderAdmin(){
   document.getElementById("logoutBtn").onclick = logout;
   document.getElementById("createCoinBtn").onclick = handleCreateCoin;
 
+  loadDefaultDuration();
+  document.getElementById("changeDurationBtn").onclick = () => {
+    openDurationPicker(currentDefaultDays || 60);
+  };
+
   loadCoinList();
+}
+
+/* ============================================================
+   DURATA DI DEFAULT — display + drum picker
+   ============================================================ */
+let currentDefaultDays = 60;
+
+function formatDurationDisplay(days){
+  if(days % 30 === 0 && days / 30 <= 24){
+    const n = days / 30;
+    return `${n} ${n === 1 ? "mese" : "mesi"}`;
+  }
+  if(days % 7 === 0 && days / 7 <= 52){
+    const n = days / 7;
+    return `${n} ${n === 1 ? "settimana" : "settimane"}`;
+  }
+  return `${days} ${days === 1 ? "giorno" : "giorni"}`;
+}
+
+async function loadDefaultDuration(){
+  const display = document.getElementById("currentDurationDisplay");
+  try{
+    const value = await sbGetSetting("default_duration_days");
+    currentDefaultDays = parseInt(value, 10) || 60;
+    display.textContent = formatDurationDisplay(currentDefaultDays);
+  }catch(e){
+    display.textContent = "Errore caricamento";
+  }
+}
+
+const DURATION_UNITS = {
+  giorni:    { label: "Giorni",    max: 365, toDays: n => n },
+  settimane: { label: "Settimane", max: 52,  toDays: n => n * 7 },
+  mesi:      { label: "Mesi",      max: 24,  toDays: n => n * 30 }
+};
+
+function openDurationPicker(currentDays){
+  let initUnit = "giorni";
+  let initValue = currentDays;
+  if(currentDays % 30 === 0 && currentDays / 30 <= 24){
+    initUnit = "mesi"; initValue = currentDays / 30;
+  }else if(currentDays % 7 === 0 && currentDays / 7 <= 52){
+    initUnit = "settimane"; initValue = currentDays / 7;
+  }
+
+  let selectedUnit = initUnit;
+  let selectedValue = initValue;
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 18px">Cambia durata</p>
+      <div class="segmented" id="unitSegmented">
+        <button data-unit="giorni">Giorni</button>
+        <button data-unit="settimane">Settimane</button>
+        <button data-unit="mesi">Mesi</button>
+      </div>
+      <div class="drum-wrapper">
+        <div class="drum-highlight"></div>
+        <div class="drum" id="valueDrum"></div>
+      </div>
+      <p class="status-sub" id="durationPreview" style="margin-bottom:18px"></p>
+      <button class="btn btn-primary" id="confirmDurationBtn">Salva durata</button>
+      <button class="btn btn-secondary" id="cancelDurationBtn" style="margin-top:10px">Annulla</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const drumEl = document.getElementById("valueDrum");
+  const previewEl = document.getElementById("durationPreview");
+  const segmentedEl = document.getElementById("unitSegmented");
+
+  function updatePreview(){
+    const totalDays = DURATION_UNITS[selectedUnit].toDays(selectedValue);
+    previewEl.textContent = `= ${totalDays} giorni totali`;
+  }
+
+  function highlightSelectedItem(value){
+    drumEl.querySelectorAll(".drum-item").forEach(el => {
+      el.classList.toggle("selected", parseInt(el.dataset.value, 10) === value);
+    });
+  }
+
+  function buildDrum(unit, initial){
+    const max = DURATION_UNITS[unit].max;
+    let html = "";
+    for(let i = 1; i <= max; i++){
+      html += `<div class="drum-item" data-value="${i}">${i}</div>`;
+    }
+    drumEl.innerHTML = html;
+
+    const itemHeight = 44;
+    const idx = Math.min(Math.max(initial, 1), max) - 1;
+    drumEl.scrollTop = idx * itemHeight;
+    selectedValue = idx + 1;
+    highlightSelectedItem(selectedValue);
+    updatePreview();
+
+    let scrollTimeout;
+    drumEl.onscroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const rawIdx = Math.round(drumEl.scrollTop / itemHeight);
+        const clamped = Math.min(Math.max(rawIdx, 0), max - 1);
+        drumEl.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
+        selectedValue = clamped + 1;
+        highlightSelectedItem(selectedValue);
+        updatePreview();
+      }, 120);
+    };
+  }
+
+  function setActiveSegment(unit){
+    segmentedEl.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.unit === unit);
+    });
+  }
+
+  segmentedEl.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => {
+      selectedUnit = btn.dataset.unit;
+      setActiveSegment(selectedUnit);
+      buildDrum(selectedUnit, selectedValue);
+    };
+  });
+
+  setActiveSegment(selectedUnit);
+  buildDrum(selectedUnit, selectedValue);
+
+  document.getElementById("cancelDurationBtn").onclick = () => overlay.remove();
+  document.getElementById("confirmDurationBtn").onclick = async () => {
+    const btn = document.getElementById("confirmDurationBtn");
+    const totalDays = DURATION_UNITS[selectedUnit].toDays(selectedValue);
+    btn.textContent = "Salvataggio…";
+    try{
+      await sbSetSetting("default_duration_days", totalDays);
+      currentDefaultDays = totalDays;
+      document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(totalDays);
+      overlay.remove();
+    }catch(e){
+      btn.textContent = "Salva durata";
+      alert("Errore durante il salvataggio.");
+    }
+  };
 }
 
 async function loadCoinList(){
@@ -561,7 +777,9 @@ async function loadCoinList(){
 
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
+    row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
     row.querySelector(".btn-reset").onclick = () => handleReset(c.id);
+    row.querySelector(".btn-delete").onclick = () => handleDelete(c.id);
   });
 }
 
@@ -594,7 +812,7 @@ function coinRowHtml(id, coin){
   <div class="coin-row" id="row-${cssId(id)}">
     <div class="coin-row-top">
       <div>
-        <div class="coin-row-id">${id}</div>
+        <div class="coin-row-id">${coin.session_code || id}</div>
         ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
       </div>
       ${statusBadge(coin)}
@@ -604,7 +822,9 @@ function coinRowHtml(id, coin){
       Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
     </div>
     <div class="btn-row">
+      <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+      <button class="btn btn-danger btn-small btn-delete">Elimina</button>
     </div>
   </div>`;
 }
@@ -634,6 +854,27 @@ async function handleCreateCoin(){
   }
 }
 
+function showCoinLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">Link VirtualCoin</p>
+      <p style="margin-bottom:14px">Copia e scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyExistingLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeExistingLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyExistingLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyExistingLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeExistingLinkPopup").onclick = () => overlay.remove();
+}
+
 function showGeneratedLinkPopup(code){
   const url = buildCoinUrl(code);
   const overlay = document.createElement("div");
@@ -645,7 +886,7 @@ function showGeneratedLinkPopup(code){
       </div>
       <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">VirtualCoin creata</p>
       <p style="margin-bottom:14px">Scrivi questo link sul tag NFC:</p>
-      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.5);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
       <button class="btn btn-primary" id="copyLinkBtn" style="margin-top:16px">Copia link</button>
       <button class="btn btn-secondary" id="closeLinkPopup" style="margin-top:10px">Chiudi</button>
     </div>`;
@@ -660,7 +901,14 @@ function showGeneratedLinkPopup(code){
 
 function handleReset(id){
   confirmAction(`Azzerare "${id}"? Tornerà riutilizzabile da zero.`, async () => {
-    await sbUpdateCoin(id, { first_scan_at: null, expires_at: null });
+    await sbUpdateCoin(id, { first_scan_at: null, expires_at: null, session_code: null });
+    loadCoinList();
+  });
+}
+
+function handleDelete(id){
+  confirmAction(`Eliminare definitivamente questa VirtualCoin? Azione irreversibile.`, async () => {
+    await sbDeleteCoin(id);
     loadCoinList();
   });
 }
@@ -689,9 +937,16 @@ function confirmAction(message, onConfirm){
   if(params.has("admin")){
     renderAdmin();
   }else if(params.has("c")){
-    renderCoinView(params.get("c"));
+    const coinId = params.get("c");
+    sessionStorage.setItem("vc_active_coin", coinId);
+    renderCoinView(coinId);
   }else{
-    renderAdmin();
+    const rememberedCoin = sessionStorage.getItem("vc_active_coin");
+    if(rememberedCoin){
+      renderCoinView(rememberedCoin);
+    }else{
+      renderAdmin();
+    }
   }
 })();
 </script>

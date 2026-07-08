@@ -347,6 +347,15 @@ async function sbSetSetting(key, value){
   return res.json();
 }
 
+async function sbApplyDurationToActiveCoins(value, unit){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/apply_duration_to_active_coins`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ p_value: value, p_unit: unit })
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento monete già attive");
+}
+
 function goHome(){ window.location.search = ""; }
 function goAdmin(){ window.location.search = "?admin=1"; }
 
@@ -420,7 +429,7 @@ function launchConfetti(){
   document.body.appendChild(container);
 
   const originX = window.innerWidth / 2;
-  const originY = window.innerHeight * 0.35;
+  const originY = -10;
   const count = 90;
 
   for(let i = 0; i < count; i++){
@@ -434,8 +443,8 @@ function launchConfetti(){
     piece.style.top = originY + "px";
     container.appendChild(piece);
 
-    // Angolo di scoppio: verso l'alto e ai lati, come un vero botto centrale
-    const angle = (Math.random() * Math.PI) + Math.PI; // tra 180° e 360° (verso l'alto)
+    // Angolo di scoppio: verso il basso e ai lati, come una cascata dalla cima
+    const angle = Math.random() * Math.PI; // tra 0° e 180° (verso il basso)
     const burstDistance = 60 + Math.random() * 160;
     const burstX = Math.cos(angle) * burstDistance;
     const burstY = Math.sin(angle) * burstDistance * 0.6;
@@ -636,7 +645,7 @@ function renderAdmin(){
 
   loadDefaultDuration();
   document.getElementById("changeDurationBtn").onclick = () => {
-    openDurationPicker(currentDefaultDays || 60);
+    openDurationPicker(currentDefaultValue || 60, currentDefaultUnit || "days");
   };
 
   loadCoinList();
@@ -645,48 +654,49 @@ function renderAdmin(){
 /* ============================================================
    DURATA DI DEFAULT — display + drum picker
    ============================================================ */
-let currentDefaultDays = 60;
+let currentDefaultValue = 60;
+let currentDefaultUnit = "days"; // 'days' | 'weeks' | 'months'
 
-function formatDurationDisplay(days){
-  if(days % 30 === 0 && days / 30 <= 24){
-    const n = days / 30;
-    return `${n} ${n === 1 ? "mese" : "mesi"}`;
+const UNIT_LABELS = {
+  days:   { singular: "giorno",    plural: "giorni" },
+  weeks:  { singular: "settimana", plural: "settimane" },
+  months: { singular: "mese",      plural: "mesi" }
+};
+
+const SEGMENT_TO_PGUNIT = { giorni: "days", settimane: "weeks", mesi: "months" };
+const PGUNIT_TO_SEGMENT = { days: "giorni", weeks: "settimane", months: "mesi" };
+
+function formatDurationDisplay(value, unit){
+  if(unit === "months" && value % 12 === 0){
+    const years = value / 12;
+    return `${years} ${years === 1 ? "anno" : "anni"}`;
   }
-  if(days % 7 === 0 && days / 7 <= 52){
-    const n = days / 7;
-    return `${n} ${n === 1 ? "settimana" : "settimane"}`;
-  }
-  return `${days} ${days === 1 ? "giorno" : "giorni"}`;
+  const l = UNIT_LABELS[unit] || UNIT_LABELS.days;
+  return `${value} ${value === 1 ? l.singular : l.plural}`;
 }
 
 async function loadDefaultDuration(){
   const display = document.getElementById("currentDurationDisplay");
   try{
-    const value = await sbGetSetting("default_duration_days");
-    currentDefaultDays = parseInt(value, 10) || 60;
-    display.textContent = formatDurationDisplay(currentDefaultDays);
+    const value = await sbGetSetting("default_duration_value");
+    const unit = await sbGetSetting("default_duration_unit");
+    currentDefaultValue = parseInt(value, 10) || 60;
+    currentDefaultUnit = unit || "days";
+    display.textContent = formatDurationDisplay(currentDefaultValue, currentDefaultUnit);
   }catch(e){
     display.textContent = "Errore caricamento";
   }
 }
 
 const DURATION_UNITS = {
-  giorni:    { label: "Giorni",    max: 365, toDays: n => n },
-  settimane: { label: "Settimane", max: 52,  toDays: n => n * 7 },
-  mesi:      { label: "Mesi",      max: 24,  toDays: n => n * 30 }
+  giorni:    { label: "Giorni",    max: 31 },
+  settimane: { label: "Settimane", max: 52 },
+  mesi:      { label: "Mesi",      max: 12 }
 };
 
-function openDurationPicker(currentDays){
-  let initUnit = "giorni";
-  let initValue = currentDays;
-  if(currentDays % 30 === 0 && currentDays / 30 <= 24){
-    initUnit = "mesi"; initValue = currentDays / 30;
-  }else if(currentDays % 7 === 0 && currentDays / 7 <= 52){
-    initUnit = "settimane"; initValue = currentDays / 7;
-  }
-
-  let selectedUnit = initUnit;
-  let selectedValue = initValue;
+function openDurationPicker(currentValue, currentUnitPg){
+  let selectedUnit = PGUNIT_TO_SEGMENT[currentUnitPg] || "giorni";
+  let selectedValue = Math.min(Math.max(currentValue, 1), DURATION_UNITS[selectedUnit].max);
 
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
@@ -713,8 +723,8 @@ function openDurationPicker(currentDays){
   const segmentedEl = document.getElementById("unitSegmented");
 
   function updatePreview(){
-    const totalDays = DURATION_UNITS[selectedUnit].toDays(selectedValue);
-    previewEl.textContent = `= ${totalDays} giorni totali`;
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
+    previewEl.textContent = `Durata selezionata: ${formatDurationDisplay(selectedValue, pgUnit)}`;
   }
 
   function highlightSelectedItem(value){
@@ -772,17 +782,51 @@ function openDurationPicker(currentDays){
   document.getElementById("cancelDurationBtn").onclick = () => overlay.remove();
   document.getElementById("confirmDurationBtn").onclick = async () => {
     const btn = document.getElementById("confirmDurationBtn");
-    const totalDays = DURATION_UNITS[selectedUnit].toDays(selectedValue);
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
     btn.textContent = "Salvataggio…";
     try{
-      await sbSetSetting("default_duration_days", totalDays);
-      currentDefaultDays = totalDays;
-      document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(totalDays);
+      await sbSetSetting("default_duration_value", selectedValue);
+      await sbSetSetting("default_duration_unit", pgUnit);
+      currentDefaultValue = selectedValue;
+      currentDefaultUnit = pgUnit;
+      document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(selectedValue, pgUnit);
       overlay.remove();
+
+      showApplyScopeModal(async (applyToActive) => {
+        if(applyToActive){
+          try{
+            await sbApplyDurationToActiveCoins(selectedValue, pgUnit);
+          }catch(e){
+            alert("Errore durante l'aggiornamento delle monete già attive.");
+          }
+        }
+        loadCoinList();
+      });
     }catch(e){
       btn.textContent = "Salva durata";
       alert("Errore durante il salvataggio.");
     }
+  };
+}
+
+function showApplyScopeModal(onChoice){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px">Applicare anche alle monete già attive?</p>
+      <p>Le nuove attivazioni useranno comunque la nuova durata. Vuoi aggiornare anche la scadenza delle monete già attivate in precedenza, ricalcolata dalla loro data di attivazione originale?</p>
+      <button class="btn btn-primary" id="applyBothBtn">Sì, anche le già attive</button>
+      <button class="btn btn-secondary" id="applyFutureOnlyBtn" style="margin-top:10px">No, solo le future</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("applyBothBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(true);
+  };
+  document.getElementById("applyFutureOnlyBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(false);
   };
 }
 
@@ -828,12 +872,11 @@ function fmtDate(iso){
 }
 
 function derivedDurationLabel(coin){
-  if(coin.first_scan_at && coin.expires_at){
-    const ms = new Date(coin.expires_at) - new Date(coin.first_scan_at);
-    const days = Math.round(ms / (1000*60*60*24));
-    return `${days} giorni`;
+  if(coin.duration_value && coin.duration_unit){
+    const text = formatDurationDisplay(coin.duration_value, coin.duration_unit);
+    return coin.first_scan_at ? text : `${text} (non ancora attivata)`;
   }
-  return `${coin.duration_days || 60} giorni (non ancora attivata)`;
+  return coin.first_scan_at ? "—" : `${currentDefaultValue} ${UNIT_LABELS[currentDefaultUnit]?.plural || "giorni"} (non ancora attivata)`;
 }
 
 function fakeDisplayCode(id){

@@ -76,15 +76,15 @@
 
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:6px;
-    border:none; border-radius:100px; padding:15px 24px; font-size:16.5px;
+    border:none; border-radius:100px; padding:16px 26px; font-size:17.5px;
     font-weight:600; cursor:pointer; width:100%; font-family:inherit;
-    min-height:48px;
+    min-height:50px;
     transition:transform .12s, opacity .12s;
     backdrop-filter:blur(12px) saturate(160%);
     -webkit-backdrop-filter:blur(12px) saturate(160%);
   }
   .btn:active{transform:scale(0.97); opacity:.85;}
-  .btn-compact{width:auto; padding:14px 30px;}
+  .btn-compact{width:auto; padding:15px 32px;}
   .btn-primary{
     background:linear-gradient(180deg, rgba(10,132,255,0.95), rgba(0,110,230,0.95));
     color:#fff; box-shadow:0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
@@ -98,8 +98,8 @@
     background:rgba(255,59,48,0.15); color:var(--red);
     border:1px solid rgba(255,59,48,0.25);
   }
-  .btn-small{width:auto; padding:12px 18px; font-size:14px; border-radius:100px; min-height:44px;}
-  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .btn-small{width:auto; padding:14px 20px; font-size:15.5px; border-radius:100px; min-height:46px;}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
   .btn-row .btn-small{flex:1; min-width:110px;}
 
   .back-btn{
@@ -153,24 +153,24 @@
     100%{ transform:translateY(115vh) rotate(720deg); opacity:0.85; }
   }
 
-  .badge{display:inline-block; padding:6px 13px; border-radius:100px; font-size:13px; font-weight:600;}
+  .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
   .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
   .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
   .badge-gray{background:rgba(142,142,147,0.15); color:var(--gray);}
 
-  h1{font-size:26px; margin:0 0 4px; letter-spacing:-0.4px;}
-  .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+  h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
+  .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
   .coin-row{
     background:var(--glass-fill); backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     border:1px solid var(--glass-border);
-    border-radius:22px; padding:18px; margin-bottom:12px;
+    border-radius:24px; padding:20px; margin-bottom:14px;
     box-shadow:0 4px 16px rgba(31,38,135,0.08);
   }
   .coin-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
-  .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; font-weight:600;}
-  .coin-row-label{font-size:14px; color:var(--text-secondary); margin-top:2px;}
-  .coin-row-meta{font-size:13px; color:var(--text-secondary); margin-top:10px; line-height:1.7;}
+  .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:18px; font-weight:700;}
+  .coin-row-label{font-size:15px; color:var(--text-secondary); margin-top:3px;}
+  .coin-row-meta{font-size:15px; color:var(--text-secondary); margin-top:12px; line-height:1.8;}
   .hidden{display:none !important;}
   .loading{text-align:center; color:var(--text-secondary); padding:40px 0; font-size:14px;}
   .error-text{color:var(--red); font-size:13px; margin-top:6px;}
@@ -266,19 +266,6 @@ async function sbInsertCoin(id){
   const rows = await res.json();
   return rows[0];
 }
-async function sbInsertCoinFull(fields){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
-    method: "POST",
-    headers: { ...authHeaders(), "Prefer": "return=representation" },
-    body: JSON.stringify(fields)
-  });
-  if(!res.ok){
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Errore creazione");
-  }
-  const rows = await res.json();
-  return rows[0];
-}
 async function sbUpdateCoin(id, fields){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
@@ -316,7 +303,40 @@ const icons = {
   alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>`
 };
 
-const COIN_PATTERN = /^coin-(\d{3})$/;
+const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // esclude 0/O/1/I per evitare ambiguità
+const CODE_LENGTH = 10;
+
+function computeChecksum(body){
+  let sum = 0;
+  for(let i = 0; i < body.length; i++){
+    sum += CODE_CHARSET.indexOf(body[i]) * (i + 7);
+  }
+  return CODE_CHARSET[sum % CODE_CHARSET.length];
+}
+
+function generateCoinId(){
+  let body = "";
+  for(let i = 0; i < CODE_LENGTH - 1; i++){
+    body += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return body + computeChecksum(body);
+}
+
+function isValidCoinFormat(id){
+  if(typeof id !== "string" || id.length !== CODE_LENGTH) return false;
+  const upper = id.toUpperCase();
+  for(const ch of upper){
+    if(!CODE_CHARSET.includes(ch)) return false;
+  }
+  const body = upper.slice(0, CODE_LENGTH - 1);
+  const checksum = upper.slice(CODE_LENGTH - 1);
+  return computeChecksum(body) === checksum;
+}
+
+function buildCoinUrl(code){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?c=${code}`;
+}
 
 function effectiveExpiry(coin){
   if(coin.expires_at) return new Date(coin.expires_at);
@@ -372,7 +392,7 @@ function showWelcomePopup(){
 }
 
 async function renderCoinView(coinId){
-  if(!COIN_PATTERN.test(coinId)){
+  if(!isValidCoinFormat(coinId)){
     app.innerHTML = `<div class="card coin-status">
       <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
       <p class="status-title">VirtualCoin non riconosciuta</p>
@@ -508,10 +528,14 @@ function renderAdmin(){
       <h1>VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
     </div>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
+    </div>
     <div id="coinList"></div>
   `;
 
   document.getElementById("logoutBtn").onclick = logout;
+  document.getElementById("createCoinBtn").onclick = handleCreateCoin;
 
   loadCoinList();
 }
@@ -537,11 +561,7 @@ async function loadCoinList(){
 
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
-    row.querySelector(".btn-rename").onclick = () => toggleRenamePanel(c.id);
     row.querySelector(".btn-reset").onclick = () => handleReset(c.id);
-    row.querySelector(".btn-move").onclick = () => toggleMovePanel(c.id, c);
-    row.querySelector(".btn-expire").onclick = () => handleExpireNow(c.id);
-    row.querySelector(".btn-delete").onclick = () => handleDelete(c.id);
   });
 }
 
@@ -584,73 +604,58 @@ function coinRowHtml(id, coin){
       Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
     </div>
     <div class="btn-row">
-      <button class="btn btn-secondary btn-small btn-rename">Correggi ID</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
-      <button class="btn btn-secondary btn-small btn-move">Modifica date</button>
-      <button class="btn btn-secondary btn-small btn-expire">Disattiva ora</button>
-      <button class="btn btn-danger btn-small btn-delete">Elimina</button>
     </div>
-    <div class="inline-panel hidden" id="rename-${cssId(id)}"></div>
-    <div class="inline-panel hidden" id="move-${cssId(id)}"></div>
   </div>`;
 }
 
-function toggleRenamePanel(id){
-  const panel = document.getElementById(`rename-${cssId(id)}`);
-  const isHidden = panel.classList.contains("hidden");
-  if(!isHidden){ panel.classList.add("hidden"); return; }
-  panel.classList.remove("hidden");
-  panel.innerHTML = `
-    <p class="error-text" style="color:var(--text-secondary);margin-bottom:10px">
-      Usa questa opzione se il tag NFC fisico è stato scritto con un ID diverso da questo.
-      Tutti i dati (attivazione, scadenza, etichetta) verranno spostati sul nuovo ID.
-    </p>
-    <label class="field-label">Nuovo ID (deve corrispondere a quello scritto sul tag)</label>
-    <input type="text" id="renameInput-${cssId(id)}" placeholder="es. coin-005">
-    <button class="btn btn-primary btn-small" id="renameSave-${cssId(id)}">Correggi ID</button>
-    <div class="error-text hidden" id="renameError-${cssId(id)}"></div>
-  `;
-  document.getElementById(`renameSave-${cssId(id)}`).onclick = async () => {
-    const newId = document.getElementById(`renameInput-${cssId(id)}`).value.trim();
-    const errEl = document.getElementById(`renameError-${cssId(id)}`);
-    const btn = document.getElementById(`renameSave-${cssId(id)}`);
-    errEl.classList.add("hidden");
+async function handleCreateCoin(){
+  const btn = document.getElementById("createCoinBtn");
+  btn.textContent = "Generazione in corso…";
+  btn.disabled = true;
 
-    if(!COIN_PATTERN.test(newId)){
-      errEl.textContent = 'ID non valido. Usa il formato "coin-005".';
-      errEl.classList.remove("hidden");
-      return;
+  try{
+    let code;
+    let attempts = 0;
+    while(attempts < 5){
+      code = generateCoinId();
+      const existing = await sbSelectCoin(code);
+      if(!existing) break;
+      attempts++;
     }
-    if(newId === id){
-      errEl.textContent = "È già l'ID attuale.";
-      errEl.classList.remove("hidden");
-      return;
-    }
+    await sbInsertCoin(code);
+    showGeneratedLinkPopup(code);
+    loadCoinList();
+  }catch(e){
+    alert("Errore durante la generazione della VirtualCoin. Riprova.");
+  }finally{
+    btn.textContent = "Genera nuova VirtualCoin";
+    btn.disabled = false;
+  }
+}
 
-    btn.textContent = "Correzione in corso…";
-    try{
-      const existing = await sbSelectCoin(newId);
-      if(existing){
-        errEl.textContent = "Esiste già una VirtualCoin con questo ID.";
-        errEl.classList.remove("hidden");
-        btn.textContent = "Correggi ID";
-        return;
-      }
-      const data = await sbSelectCoin(id);
-      await sbInsertCoinFull({
-        id: newId,
-        label: data.label,
-        first_scan_at: data.first_scan_at,
-        expires_at: data.expires_at
-      });
-      await sbDeleteCoin(id);
-      loadCoinList();
-    }catch(e){
-      errEl.textContent = "Errore durante la correzione dell'ID.";
-      errEl.classList.remove("hidden");
-      btn.textContent = "Correggi ID";
-    }
+function showGeneratedLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(52,199,89,0.15);color:var(--green)">
+        ${icons.check}
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">VirtualCoin creata</p>
+      <p style="margin-bottom:14px">Scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.5);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyLinkBtn").textContent = "Copiato!";
+    });
   };
+  document.getElementById("closeLinkPopup").onclick = () => overlay.remove();
 }
 
 function handleReset(id){
@@ -658,71 +663,6 @@ function handleReset(id){
     await sbUpdateCoin(id, { first_scan_at: null, expires_at: null });
     loadCoinList();
   });
-}
-function handleExpireNow(id){
-  confirmAction(`Disattivare subito "${id}"?`, async () => {
-    await sbUpdateCoin(id, { expires_at: new Date().toISOString() });
-    loadCoinList();
-  });
-}
-function handleDelete(id){
-  confirmAction(`Eliminare definitivamente "${id}"? Azione irreversibile.`, async () => {
-    await sbDeleteCoin(id);
-    loadCoinList();
-  });
-}
-
-function toDatetimeLocalValue(date){
-  if(!date) return "";
-  const pad = n => String(n).padStart(2,"0");
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function toggleMovePanel(id, coin){
-  const panel = document.getElementById(`move-${cssId(id)}`);
-  const isHidden = panel.classList.contains("hidden");
-  if(!isHidden){ panel.classList.add("hidden"); return; }
-  panel.classList.remove("hidden");
-
-  const currentStart = coin.first_scan_at ? new Date(coin.first_scan_at) : new Date();
-  const currentExpiry = effectiveExpiry(coin) || (() => {
-    const d = new Date(currentStart);
-    d.setDate(d.getDate() + 60);
-    return d;
-  })();
-
-  panel.innerHTML = `
-    <label class="field-label">Data attivazione</label>
-    <input type="datetime-local" id="startInput-${cssId(id)}" value="${toDatetimeLocalValue(currentStart)}">
-    <label class="field-label">Data scadenza</label>
-    <input type="datetime-local" id="endInput-${cssId(id)}" value="${toDatetimeLocalValue(currentExpiry)}">
-    <p class="error-text" style="color:var(--text-secondary);margin-bottom:10px">
-      Cambiando la data attivazione, la scadenza si sposta mantenendo la stessa durata.
-      Puoi comunque modificare la scadenza a mano per accorciare o allungare la validità.
-    </p>
-    <button class="btn btn-primary btn-small" id="moveSave-${cssId(id)}">Salva date</button>
-  `;
-
-  const startInput = document.getElementById(`startInput-${cssId(id)}`);
-  const endInput = document.getElementById(`endInput-${cssId(id)}`);
-  const originalDurationMs = currentExpiry - currentStart;
-
-  startInput.addEventListener("change", () => {
-    const newStart = new Date(startInput.value);
-    if(isNaN(newStart)) return;
-    const newEnd = new Date(newStart.getTime() + originalDurationMs);
-    endInput.value = toDatetimeLocalValue(newEnd);
-  });
-
-  document.getElementById(`moveSave-${cssId(id)}`).onclick = async () => {
-    const startVal = startInput.value;
-    const endVal = endInput.value;
-    const fields = {};
-    if(startVal) fields.first_scan_at = new Date(startVal).toISOString();
-    if(endVal) fields.expires_at = new Date(endVal).toISOString();
-    await sbUpdateCoin(id, fields);
-    loadCoinList();
-  };
 }
 
 function confirmAction(message, onConfirm){

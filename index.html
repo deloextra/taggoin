@@ -701,23 +701,28 @@ function drawCoinStatus(coin, isFirstActivation){
     return;
   }
 
-  // Moneta valida: prima l'animazione (moneta che cresce e dissolve nella spunta),
-  // poi la scheda finale. Per la prima attivazione, coriandoli + popup precedono tutto.
+  // Solo alla PRIMA attivazione: coriandoli + popup -> animazione moneta -> scheda.
+  // Dalle visite successive: scheda diretta, senza animazioni, moneta già ferma.
   if(isFirstActivation){
     launchConfetti();
     showWelcomePopup(() => {
-      playCoinRevealAnimation(() => renderActiveCard(coin, expiry));
+      playCoinRevealAnimation(() => renderActiveCard(coin, expiry, true));
     });
   }else{
-    playCoinRevealAnimation(() => renderActiveCard(coin, expiry));
+    renderActiveCard(coin, expiry, false);
   }
 }
 
-function renderActiveCard(coin, expiry){
-  app.innerHTML = `<div class="card coin-status card-enter">
+function renderActiveCard(coin, expiry, animated){
+  // Contenuto del cerchio: se "animated" è true, parte dalla spunta e sfuma nella moneta;
+  // se false (visite successive), la moneta è già visibile e ferma, senza animazioni.
+  const iconInner = animated
+    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin">`
+    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;">`;
+
+  app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
-      <span class="result-check">${icons.check}</span>
-      <img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin">
+      ${iconInner}
     </div>
     <p class="status-sub" style="margin-bottom:2px">Ecco la tua VirtualCoin</p>
     <p class="status-title status-title-futuristic">Attiva</p>

@@ -246,6 +246,16 @@
   }
 
   .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
+  .duration-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--glass-fill); border:1px solid var(--glass-border);
+    border-radius:100px; padding:8px 16px;
+    margin:0 0 16px; cursor:pointer; font-family:inherit;
+    color:var(--text); -webkit-tap-highlight-color:transparent;
+  }
+  .duration-pill:active{transform:scale(0.96); opacity:.85;}
+  .duration-pill-label{font-size:11.5px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.4px;}
+  .duration-pill strong{font-size:13.5px; font-weight:700;}
   .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
   .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
   .badge-gray{background:rgba(255,255,255,0.10); color:var(--text-secondary);}
@@ -302,7 +312,12 @@
       align-items:start;
     }
     #coinList .coin-row{margin-bottom:0;}
+    #coinList .coin-list-empty{
+      grid-column:1 / -1;
+      font-size:17px;
+    }
   }
+  #coinList .coin-list-empty{text-align:center; font-size:15px;}
 
   /* ---------- segmented control ---------- */
   .segmented{
@@ -815,11 +830,10 @@ function renderAdmin(){
       <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
     </div>
-    <div class="card" style="text-align:center">
-      <label class="field-label" style="text-align:center">Durata validità di default</label>
-      <p id="currentDurationDisplay" style="font-size:24px;font-weight:700;color:var(--text);margin:4px 0 18px">…</p>
-      <button class="btn btn-secondary btn-compact" id="changeDurationBtn">Cambia durata</button>
-    </div>
+    <button type="button" class="duration-pill" id="changeDurationBtn">
+      <span class="duration-pill-label">Durata default</span>
+      <strong id="currentDurationDisplay">…</strong>
+    </button>
     <div class="top-actions">
       <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
     </div>
@@ -1023,18 +1037,18 @@ function showApplyScopeModal(onChoice){
 
 async function loadCoinList(){
   const listEl = document.getElementById("coinList");
-  listEl.innerHTML = `<div class="loading">Caricamento…</div>`;
+  listEl.innerHTML = `<div class="loading coin-list-empty">Caricamento…</div>`;
 
   let coins;
   try{
     coins = await sbSelectAllCoins();
   }catch(e){
-    listEl.innerHTML = `<div class="error-text">Errore nel caricamento delle VirtualCoin.</div>`;
+    listEl.innerHTML = `<div class="error-text coin-list-empty">Errore nel caricamento delle VirtualCoin.</div>`;
     return;
   }
 
   if(!coins.length){
-    listEl.innerHTML = `<div class="loading">Nessuna VirtualCoin registrata.</div>`;
+    listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin registrata.</div>`;
     return;
   }
 
@@ -1043,6 +1057,8 @@ async function loadCoinList(){
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
     row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
+    const manualBtn = row.querySelector(".btn-manual-activate");
+    if(manualBtn) manualBtn.onclick = () => handleManualActivate(c);
     row.querySelector(".btn-unlock-device").onclick = () => handleUnlockDevice(c);
     row.querySelector(".btn-reset").onclick = () => handleReset(c);
   });
@@ -1112,6 +1128,7 @@ function coinRowHtml(id, coin){
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
+      ${!coin.first_scan_at ? `<button class="btn btn-secondary btn-small btn-manual-activate">Attiva senza NFC</button>` : ""}
       <button class="btn btn-secondary btn-small btn-unlock-device">Sblocca dispositivo</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
     </div>
@@ -1192,6 +1209,14 @@ function handleReset(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
   confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
     await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode(), device_id: null });
+    loadCoinList();
+  });
+}
+
+function handleManualActivate(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Attivare "${currentCode}" senza NFC? Utile per un cliente il cui telefono non legge gli NFC. La moneta risulterà subito attiva, ma non verrà agganciata a nessun dispositivo: sarà il primo telefono che apre il link a diventarne il proprietario, esattamente come per una prima attivazione normale.`, async () => {
+    await sbUpdateCoin(coin.id, { first_scan_at: new Date().toISOString() });
     loadCoinList();
   });
 }

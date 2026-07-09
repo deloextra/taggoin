@@ -353,6 +353,19 @@ const TABLE = "nfc_coins";
 const app = document.getElementById("app");
 const COIN_IMG = "images/coin.png";
 
+// Identificativo del dispositivo, persistente su localStorage (non sessionStorage:
+// deve sopravvivere alla chiusura del browser). Serve a legare una VirtualCoin
+// al primo dispositivo che la attiva, per evitare che il link venga condiviso
+// e mostri "Attiva" anche su telefoni diversi da quello del possessore.
+function getDeviceId(){
+  let id = localStorage.getItem("vc_device_id");
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+    localStorage.setItem("vc_device_id", id);
+  }
+  return id;
+}
+
 function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
 function isLoggedIn(){ return !!getAccessToken(); }
 
@@ -657,7 +670,7 @@ async function renderCoinView(coinId){
 
   if(!coin){
     try{
-      coin = await sbInsertCoin(coinId);
+      coin = await sbInsertCoin(coinId, { device_id: getDeviceId() });
       isFirstActivation = true;
     }catch(e){
       coin = await sbSelectCoin(coinId).catch(() => null);
@@ -672,13 +685,34 @@ async function renderCoinView(coinId){
     }
   }else if(!coin.first_scan_at){
     try{
-      coin = await sbUpdateCoin(coinId, { first_scan_at: new Date().toISOString() });
+      coin = await sbUpdateCoin(coinId, { first_scan_at: new Date().toISOString(), device_id: getDeviceId() });
       isFirstActivation = true;
     }catch(e){
       app.innerHTML = `<div class="card coin-status">
         <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
         <p class="status-title">Errore</p>
         <p class="status-sub">Non è stato possibile attivare questa VirtualCoin.</p>
+      </div>`;
+      return;
+    }
+  }
+
+  // Moneta già attivata in precedenza: verifica che sia lo stesso dispositivo
+  // che l'ha attivata la prima volta, per evitare che il link condiviso mostri
+  // "Attiva" anche su telefoni diversi da quello del possessore originale.
+  if(!isFirstActivation){
+    const myDeviceId = getDeviceId();
+    if(!coin.device_id){
+      // Moneta senza dispositivo agganciato (creata prima di questa funzione,
+      // oppure sbloccata dallo staff dal pannello admin): la lega a questo dispositivo.
+      try{
+        coin = await sbUpdateCoin(coinId, { device_id: myDeviceId });
+      }catch(e){ /* se fallisce, si procede comunque a mostrare la scheda */ }
+    }else if(coin.device_id !== myDeviceId){
+      app.innerHTML = `<div class="card coin-status">
+        <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+        <p class="status-title">Dispositivo non riconosciuto</p>
+        <p class="status-sub">Questa VirtualCoin risulta già collegata a un altro dispositivo.</p>
       </div>`;
       return;
     }
@@ -778,7 +812,7 @@ function renderAdmin(){
 
   app.innerHTML = `
     <div class="admin-header">
-      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Virtual Coin</h1>
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
     </div>
     <div class="card" style="text-align:center">
@@ -787,7 +821,7 @@ function renderAdmin(){
       <button class="btn btn-secondary btn-compact" id="changeDurationBtn">Cambia durata</button>
     </div>
     <div class="top-actions">
-      <button class="btn btn-primary" id="createCoinBtn">Genera nuova Virtual Coin</button>
+      <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
     </div>
     <div id="coinList"></div>
   `;
@@ -1009,6 +1043,7 @@ async function loadCoinList(){
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
     row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
+    row.querySelector(".btn-unlock-device").onclick = () => handleUnlockDevice(c);
     row.querySelector(".btn-reset").onclick = () => handleReset(c);
   });
 }
@@ -1077,6 +1112,7 @@ function coinRowHtml(id, coin){
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
+      <button class="btn btn-secondary btn-small btn-unlock-device">Sblocca dispositivo</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
     </div>
   </div>`;
@@ -1155,7 +1191,15 @@ function showGeneratedLinkPopup(code){
 function handleReset(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
   confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
-    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode() });
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode(), device_id: null });
+    loadCoinList();
+  });
+}
+
+function handleUnlockDevice(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Sbloccare il dispositivo collegato a "${currentCode}"? Il prossimo telefono che apre il link diventerà il nuovo proprietario della VirtualCoin (utile se il cliente ha cambiato telefono).`, async () => {
+    await sbUpdateCoin(coin.id, { device_id: null });
     loadCoinList();
   });
 }

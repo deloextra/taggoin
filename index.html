@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>NFC Coins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#322d4d;
+    --purple-deep:#241f39;
+    --purple-light:#4c4472;
+    --pink:#da739e;
+    --pink-dark:#c2597f;
+    --pink-soft:#e6a0bf;
+    --green:#34C759;
+    --red:#FF3B30;
+    --gray:#8E8E93;
+    --text:#F4F0F8;
+    --text-secondary:rgba(244,240,248,0.62);
+    --separator:rgba(255,255,255,0.14);
+    --glass-fill:rgba(255,255,255,0.07);
+    --glass-fill-strong:rgba(255,255,255,0.13);
+    --glass-border:rgba(255,255,255,0.18);
+  }
+  @font-face{
+    font-family: 'SpaceAge';
+    src: url('fonts/SpaceAge.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  .brand-title{
+    font-family:'SpaceAge', -apple-system, sans-serif;
+    font-size:30px; text-align:center; letter-spacing:2px;
+    margin:0 0 20px; font-weight:400;
+    background:linear-gradient(135deg, var(--pink), var(--purple-light));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(218,115,158,0.30), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(76,68,114,0.55), transparent 45%),
+      radial-gradient(circle at 20% 90%, rgba(218,115,158,0.16), transparent 45%),
+      radial-gradient(circle at 90% 85%, rgba(76,68,114,0.40), transparent 45%),
+      linear-gradient(180deg, var(--purple), var(--purple-deep));
+    background-repeat:no-repeat;
+    background-size:100% 100%;
+  }
+  #scrollContainer{
+    position:absolute; inset:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    display:flex; justify-content:center;
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  }
+  .wrap{width:100%; max-width:480px; position:relative;}
+
+  .card{
+    background:var(--glass-fill);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    border:1px solid var(--glass-border);
+    border-radius:30px; padding:30px 26px;
+    box-shadow:0 8px 32px rgba(31,38,135,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+    margin-bottom:16px;
+  }
+  input[type=text], input[type=password], input[type=number], input[type=datetime-local]{
+    width:100%; padding:16px 18px; border-radius:16px; border:1px solid var(--separator);
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(8px);
+    font-size:17px; color:var(--text); outline:none;
+    font-family:inherit; margin-bottom:12px;
+  }
+  input:focus{border-color:var(--pink); background:rgba(255,255,255,0.10);}
+  label.field-label{
+    font-size:14px; color:var(--text-secondary); font-weight:600;
+    margin:0 0 6px 4px; display:block;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:100px; padding:16px 26px; font-size:17.5px;
+    font-weight:600; cursor:pointer; width:100%; font-family:inherit;
+    min-height:50px;
+    transition:transform .12s, opacity .12s;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .btn:active{transform:scale(0.97); opacity:.85;}
+  .btn-compact{width:auto; padding:15px 32px;}
+  .btn-primary{
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark));
+    color:#fff; box-shadow:0 4px 14px rgba(218,115,158,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .btn-secondary{
+    background:rgba(255,255,255,0.08); color:var(--pink-soft);
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  .btn-danger{
+    background:rgba(255,59,48,0.15); color:var(--red);
+    border:1px solid rgba(255,59,48,0.25);
+  }
+  .btn-small{width:auto; padding:14px 20px; font-size:15.5px; border-radius:100px; min-height:46px;}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .btn-row .btn-small{flex:1; min-width:110px;}
+
+  .back-btn{
+    width:46px; height:46px; border-radius:50%; border:1px solid var(--glass-border);
+    background:var(--glass-fill-strong); backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    margin-bottom:18px; box-shadow:0 4px 14px rgba(31,38,135,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+    color:var(--pink-soft); transition:transform .12s;
+  }
+  .back-btn:active{transform:scale(0.9);}
+  .back-btn svg{width:20px; height:20px;}
+
+  .coin-status{text-align:center; padding:28px 0;}
+  .icon-circle{
+    width:116px; height:116px; border-radius:50%; margin:0 auto 24px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
+  }
+  .icon-circle svg{width:52px; height:52px;}
+  .icon-circle.result-icon{position:relative; overflow:hidden;}
+  .result-check{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    opacity:1;
+    animation: resultCheckFade .6s ease 1.15s forwards;
+  }
+  .result-coin-static{
+    position:absolute; top:50%; left:50%; width:118%; height:118%;
+    transform:translate(-50%,-50%);
+    object-fit:cover;
+    filter:drop-shadow(0 3px 8px rgba(230,160,20,0.35));
+    opacity:0;
+    animation: resultCoinFadeIn .6s ease 1.15s forwards;
+  }
+  @keyframes resultCheckFade{
+    0%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(0.85); }
+  }
+  @keyframes resultCoinFadeIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.85); }
+    100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .status-title{font-size:28px; font-weight:700; margin:0 0 8px; letter-spacing:-0.4px;}
+  .status-title-futuristic{
+    font-family:'SpaceAge', 'Orbitron', -apple-system, sans-serif;
+    font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    background:linear-gradient(135deg, #baffc9, var(--green));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 18px rgba(52,199,89,0.35);
+  }
+  .card-enter{
+    animation: cardEnterAnim .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes cardEnterAnim{
+    0%{ opacity:0; transform:translateY(10px) scale(0.98); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .status-sub{font-size:15px; color:var(--text-secondary); margin:0 0 22px;}
+  .date-block{
+    background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);
+    border-radius:18px; padding:14px 18px; margin:18px 8px 14px; text-align:left;
+  }
+  .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; font-size:13.5px;}
+  .date-row + .date-row{border-top:1px solid var(--separator);}
+  .date-row span{color:var(--text-secondary);}
+  .date-row strong{font-weight:600; text-align:right; font-size:13.5px;}
+  .note-text{
+    font-size:12px; color:var(--text-secondary); margin:0 0 4px; line-height:1.5;
+  }
+  .section-divider{
+    height:1px; background:var(--separator); margin:22px 0 20px; border:none;
+  }
+  .coin-id{
+    font-size:13px; color:var(--text-secondary); margin-top:18px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:rgba(255,255,255,0.07); display:inline-block; padding:8px 16px; border-radius:100px;
+    border:1px solid var(--glass-border);
+  }
+
+  /* ---------- coriandoli ---------- */
+  .confetti-piece{
+    position:fixed; border-radius:2px; pointer-events:none;
+  }
+
+  /* ---------- animazione moneta -> spunta (schermo intero) ---------- */
+  .coin-reveal{
+    position:fixed; inset:0; z-index:80;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:28px;
+  }
+  .coin-reveal-stage{
+    position:relative; width:min(198px, 47vw); height:min(198px, 47vw);
+    margin:0 auto 26px;
+    overflow:visible;
+  }
+  .coin-reveal-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+    filter:drop-shadow(0 10px 34px rgba(230,160,20,0.5));
+    animation: coinGrowFade 2.6s cubic-bezier(.45,0,.4,1) both;
+    z-index:2;
+  }
+  .coin-reveal-check{
+    position:absolute; top:50%; left:50%; width:116px; height:116px;
+    transform:translate(-50%,-50%) scale(0.5); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(52,199,89,0.15); color:var(--green);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
+    opacity:0;
+    animation: checkPopIn .5s cubic-bezier(.34,1.56,.64,1) 2.3s forwards;
+  }
+  .coin-reveal-check svg{width:52px; height:52px;}
+  @keyframes coinGrowFade{
+    0%{ opacity:0; transform:scale(0.6); }
+    25%{ opacity:1; transform:scale(1); }
+    62%{ opacity:1; transform:scale(1.3); }
+    85%{ opacity:1; transform:scale(1.3); }
+    100%{ opacity:0; transform:scale(1.4); }
+  }
+  @keyframes checkPopIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.5); }
+    100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .coin-reveal.reveal-exit{
+    animation: revealExit .45s ease both;
+  }
+  @keyframes revealExit{
+    0%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(0.97); }
+  }
+
+  .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
+  .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
+  .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
+  .badge-gray{background:rgba(255,255,255,0.10); color:var(--text-secondary);}
+
+  h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
+  .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
+  .coin-row{
+    background:var(--glass-fill); backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border:1px solid var(--glass-border);
+    border-radius:24px; padding:20px; margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(31,38,135,0.08);
+    transform:translateZ(0);
+    will-change:transform;
+  }
+  .coin-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:18px; font-weight:700;}
+  .coin-row-label{font-size:15px; color:var(--text-secondary); margin-top:3px;}
+  .coin-row-meta{font-size:15px; color:var(--text-secondary); margin-top:12px; line-height:1.8;}
+  .hidden{display:none !important;}
+  .loading{text-align:center; color:var(--text-secondary); padding:40px 0; font-size:14px;}
+  .error-text{color:var(--red); font-size:13px; margin-top:6px;}
+  .inline-panel{margin-top:12px; padding-top:12px; border-top:1px solid var(--separator);}
+  .top-actions{display:flex; gap:8px; margin-bottom:16px;}
+  .top-actions .btn{width:auto; flex:1;}
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,17,32,0.55); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-box{
+    background:rgba(50,45,77,0.92); backdrop-filter:blur(28px) saturate(180%);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.22);
+    border-radius:24px; padding:26px; width:100%; max-width:340px; text-align:center;
+    box-shadow:0 16px 48px rgba(0,0,0,0.45);
+  }
+  .modal-box p{font-size:16px; color:var(--text); line-height:1.5; margin:8px 0 22px; font-weight:500;}
+  .notice{
+    background:rgba(218,115,158,0.12); color:var(--pink-soft); font-size:12px; padding:10px 14px;
+    border-radius:14px; margin-bottom:16px; text-align:center;
+    border:1px solid rgba(218,115,158,0.25);
+  }
+
+  /* ---------- layout desktop: schede monete a griglia ---------- */
+  @media (min-width: 820px){
+    .wrap{max-width:960px;}
+    .wrap > .admin-header, .wrap > .card, .wrap > .top-actions{
+      max-width:480px; margin-left:auto; margin-right:auto;
+    }
+    #coinList{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+      gap:16px;
+      align-items:start;
+    }
+    #coinList .coin-row{margin-bottom:0;}
+  }
+
+  /* ---------- segmented control ---------- */
+  .segmented{
+    display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
+    padding:4px; gap:4px; margin-bottom:18px;
+  }
+  .segmented button{
+    flex:1; padding:11px 6px; border:none; border-radius:11px; background:transparent;
+    color:var(--text-secondary); font-weight:600; font-size:14.5px; cursor:pointer;
+    font-family:inherit; transition:background .15s, color .15s;
+  }
+  .segmented button.active{
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark)); color:#fff;
+  }
+
+  /* ---------- drum picker ---------- */
+  .drum-wrapper{ position:relative; height:154px; margin-bottom:20px; }
+  .drum{
+    height:154px; overflow-y:scroll; scroll-snap-type:y mandatory;
+    -webkit-overflow-scrolling:touch; padding:55px 0;
+    scrollbar-width:none;
+  }
+  .drum::-webkit-scrollbar{ display:none; }
+  .drum-item{
+    height:44px; display:flex; align-items:center; justify-content:center;
+    scroll-snap-align:center; font-size:19px; color:var(--text-secondary);
+    font-variant-numeric:tabular-nums;
+  }
+  .drum-item.selected{ color:var(--text); font-weight:700; font-size:25px; }
+  .drum-highlight{
+    position:absolute; top:55px; left:0; right:0; height:44px;
+    border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05); border-radius:12px; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="scrollContainer">
+  <div class="wrap" id="app">
+    <div class="loading">Caricamento…</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://uwethdprcasmnlnzeodo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j5klwLreYU47Qxi6f6QIBw_oFeSdKcf";
+const TABLE = "nfc_coins";
+const app = document.getElementById("app");
+const COIN_IMG = "images/coin.png";
+
+function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
+function isLoggedIn(){ return !!getAccessToken(); }
+
+function authHeaders(){
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Content-Type": "application/json"
+  };
+  const token = getAccessToken();
+  if(token){
+    headers["Authorization"] = "Bearer " + token;
+  }
+  return headers;
+}
+
+async function login(email, password){
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+    cache: "no-store"
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description || data.msg || "Credenziali non valide");
+  sessionStorage.setItem("vc_access_token", data.access_token);
+  sessionStorage.setItem("vc_refresh_token", data.refresh_token);
+}
+
+function logout(){
+  sessionStorage.removeItem("vc_access_token");
+  sessionStorage.removeItem("vc_refresh_token");
+  goHome();
+}
+
+async function sbSelectCoin(id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+async function sbSelectAllCoins(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  return res.json();
+}
+async function sbHasActiveCoins(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows.length > 0;
+}
+async function sbInsertCoin(id, extraFields = {}){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify({ id, ...extraFields }),
+    cache: "no-store"
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    const e = new Error(err.message || "Errore creazione");
+    e.code = err.code;
+    throw e;
+  }
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbUpdateCoin(id, fields){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify(fields),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento");
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbDeleteCoin(id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore eliminazione");
+}
+
+async function sbGetSetting(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: authHeaders(),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore lettura impostazioni");
+  const rows = await res.json();
+  return rows[0] ? rows[0].value : null;
+}
+async function sbSetSetting(key, value){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.${encodeURIComponent(key)}`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify({ value: String(value) }),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore salvataggio impostazioni");
+  return res.json();
+}
+
+async function sbApplyDurationToActiveCoins(value, unit){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/apply_duration_to_active_coins`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ p_value: value, p_unit: unit }),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento monete già attive");
+}
+
+function goHome(){ window.location.search = ""; }
+function goAdmin(){ window.location.search = "?admin=1"; }
+
+function backButtonHtml(){
+  return `<div class="back-btn" id="backBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </div>`;
+}
+function attachBackButton(handler){
+  const btn = document.getElementById("backBtn");
+  if(btn) btn.onclick = handler;
+}
+
+const icons = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>`
+};
+
+const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // esclude 0/O/1/I per evitare ambiguità
+const CODE_LENGTH = 10;
+
+function computeChecksum(body){
+  let sum = 0;
+  for(let i = 0; i < body.length; i++){
+    sum += CODE_CHARSET.indexOf(body[i]) * (i + 7);
+  }
+  return CODE_CHARSET[sum % CODE_CHARSET.length];
+}
+
+function generateCoinId(){
+  let body = "";
+  for(let i = 0; i < CODE_LENGTH - 1; i++){
+    body += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return body + computeChecksum(body);
+}
+
+function isValidCoinFormat(id){
+  if(typeof id !== "string" || id.length !== CODE_LENGTH) return false;
+  const upper = id.toUpperCase();
+  for(const ch of upper){
+    if(!CODE_CHARSET.includes(ch)) return false;
+  }
+  const body = upper.slice(0, CODE_LENGTH - 1);
+  const checksum = upper.slice(CODE_LENGTH - 1);
+  return computeChecksum(body) === checksum;
+}
+
+function buildCoinUrl(code){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?c=${code}`;
+}
+
+function effectiveExpiry(coin){
+  if(coin.expires_at) return new Date(coin.expires_at);
+  return null;
+}
+function fmtDateTime(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("it-IT", { dateStyle:"long", timeStyle:"medium" });
+}
+
+function launchConfetti(){
+  const colors = ["#007AFF","#34C759","#FF9500","#FF3B30","#AF52DE","#FFD60A","#5AC8FA"];
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.inset = "0";
+  container.style.pointerEvents = "none";
+  container.style.zIndex = "9999";
+  document.body.appendChild(container);
+
+  const count = 80;
+  let maxTotalTime = 0;
+
+  for(let i = 0; i < count; i++){
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    const size = 6 + Math.random() * 7;
+    piece.style.width = size + "px";
+    piece.style.height = (size * 1.6) + "px";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.left = (Math.random() * 100) + "vw";
+    piece.style.top = "-20px";
+    container.appendChild(piece);
+
+    // Caduta naturale: leggero ondeggiamento laterale invece di un tragitto rettilineo,
+    // come farebbe un vero coriandolo cadendo nell'aria.
+    const fallDistance = window.innerHeight + 60;
+    const swayAmount = 30 + Math.random() * 50;
+    const swayDirection = Math.random() < 0.5 ? 1 : -1;
+    const rotation = (Math.random() < 0.5 ? 1 : -1) * (280 + Math.random() * 400);
+    const duration = 3200 + Math.random() * 2200;
+    const delay = Math.random() * 900;
+
+    piece.animate([
+      { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1, offset: 0 },
+      { transform: `translate(${swayDirection * swayAmount}px, ${fallDistance * 0.35}px) rotate(${rotation * 0.3}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${-swayDirection * swayAmount * 0.6}px, ${fallDistance * 0.7}px) rotate(${rotation * 0.7}deg)`, opacity: 1, offset: 0.7 },
+      { transform: `translate(${swayDirection * swayAmount * 0.3}px, ${fallDistance}px) rotate(${rotation}deg)`, opacity: 0, offset: 1 }
+    ], {
+      duration,
+      delay,
+      easing: "ease-in",
+      fill: "forwards"
+    });
+
+    maxTotalTime = Math.max(maxTotalTime, duration + delay);
+  }
+
+  setTimeout(() => container.remove(), maxTotalTime + 200);
+}
+
+function showWelcomePopup(onOk){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.zIndex = "250";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(218,115,158,0.18);color:var(--pink-soft)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 2l2.6 6.6L21 10l-5 4.4L17.5 21 12 17.3 6.5 21 8 14.4 3 10l6.4-1.4z"/></svg>
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 8px">Complimenti!</p>
+      <p>Hai guadagnato una <strong>VirtualCoin</strong> che ti dà diritto a una partita gratis.</p>
+      <button class="btn btn-primary" id="welcomeOk">OK</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("welcomeOk").onclick = () => {
+    overlay.remove();
+    if(onOk) onOk();
+  };
+}
+
+// Mostra la moneta che cresce e dissolve, lasciando il posto al cerchio con la spunta verde
+function playCoinRevealAnimation(onDone){
+  app.innerHTML = `<div class="coin-reveal">
+    <div class="coin-reveal-stage">
+      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin">
+      <div class="coin-reveal-check">${icons.check}</div>
+    </div>
+    <p class="status-sub" style="margin:0">Verifica in corso…</p>
+  </div>`;
+
+  // Sequenza conclusa: dissolvenza morbida della schermata con la spunta,
+  // poi si richiama la scheda finale (che entra con il suo fade-in)
+  setTimeout(() => {
+    const revealCard = app.querySelector(".coin-reveal");
+    if(revealCard) revealCard.classList.add("reveal-exit");
+    setTimeout(onDone, 380);
+  }, 2900);
+}
+
+async function renderCoinView(coinId){
+  // Ripulisce subito la barra indirizzi: il codice serve solo un istante
+  // per identificare la moneta, poi spariscono dall'URL visibile.
+  if(window.history && window.history.replaceState){
+    window.history.replaceState(null, "", window.location.pathname);
+  }
+
+  if(!isValidCoinFormat(coinId)){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">VirtualCoin non riconosciuta</p>
+      <p class="status-sub">Formato ID non valido.</p>
+      <div class="coin-id">${coinId}</div>
+    </div>`;
+    return;
+  }
+
+  app.innerHTML = `<div class="loading">Verifica in corso…</div>`;
+
+  let coin;
+  try{
+    coin = await sbSelectCoin(coinId);
+  }catch(e){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Errore di connessione</p>
+      <p class="status-sub">Impossibile contattare il server. Riprova.</p>
+    </div>`;
+    return;
+  }
+
+  let isFirstActivation = false;
+
+  if(!coin){
+    try{
+      coin = await sbInsertCoin(coinId);
+      isFirstActivation = true;
+    }catch(e){
+      coin = await sbSelectCoin(coinId).catch(() => null);
+      if(!coin){
+        app.innerHTML = `<div class="card coin-status">
+          <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+          <p class="status-title">Errore</p>
+          <p class="status-sub">Non è stato possibile registrare questa VirtualCoin.</p>
+        </div>`;
+        return;
+      }
+    }
+  }else if(!coin.first_scan_at){
+    try{
+      coin = await sbUpdateCoin(coinId, { first_scan_at: new Date().toISOString() });
+      isFirstActivation = true;
+    }catch(e){
+      app.innerHTML = `<div class="card coin-status">
+        <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+        <p class="status-title">Errore</p>
+        <p class="status-sub">Non è stato possibile attivare questa VirtualCoin.</p>
+      </div>`;
+      return;
+    }
+  }
+
+  drawCoinStatus(coin, isFirstActivation);
+}
+
+function drawCoinStatus(coin, isFirstActivation){
+  const expiry = effectiveExpiry(coin);
+  const now = new Date();
+
+  if(!expiry || now >= expiry){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Scaduta</p>
+      <p class="status-sub">La validità di questa VirtualCoin è terminata.</p>
+      <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
+    </div>`;
+    return;
+  }
+
+  // Moneta valida: prima l'animazione (moneta che cresce e dissolve nella spunta),
+  // poi la scheda finale. Per la prima attivazione, coriandoli + popup precedono tutto.
+  if(isFirstActivation){
+    launchConfetti();
+    showWelcomePopup(() => {
+      playCoinRevealAnimation(() => renderActiveCard(coin, expiry));
+    });
+  }else{
+    playCoinRevealAnimation(() => renderActiveCard(coin, expiry));
+  }
+}
+
+function renderActiveCard(coin, expiry){
+  app.innerHTML = `<div class="card coin-status card-enter">
+    <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
+      <span class="result-check">${icons.check}</span>
+      <img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin">
+    </div>
+    <p class="status-sub" style="margin-bottom:2px">Ecco la tua VirtualCoin</p>
+    <p class="status-title status-title-futuristic">Attiva</p>
+    <div class="date-block">
+      <div class="date-row"><span>Attivata il</span><strong>${fmtDateTime(coin.first_scan_at)}</strong></div>
+      <div class="date-row"><span>Scade il</span><strong>${fmtDateTime(expiry.toISOString())}</strong></div>
+    </div>
+    <p class="note-text">Dopo la data di scadenza la VirtualCoin non sarà più utilizzabile.</p>
+    <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
+
+    <div class="section-divider"></div>
+
+    <p class="status-sub" style="margin-bottom:16px">Vivi un'esperienza indimenticabile: scopri le nostre avventure e prenota subito il tuo posto.</p>
+    <button class="btn btn-primary btn-compact" id="bookAdventureBtn">Prenota la tua avventura</button>
+  </div>`;
+
+  document.getElementById("bookAdventureBtn").onclick = () => {
+    window.open("https://www.vrgprato.it/", "_blank");
+  };
+}
+
+function renderAdmin(){
+  if(!isLoggedIn()){
+    app.innerHTML = `
+      <p class="brand-title">VIRTUAL COIN</p>
+      <div class="card">
+        <h1>Accesso admin</h1>
+        <label class="field-label">Email</label>
+        <input type="text" id="loginUser" autocomplete="username">
+        <label class="field-label">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password">
+        <button class="btn btn-primary" id="loginBtn">Accedi</button>
+        <div class="error-text hidden" id="loginError"></div>
+      </div>`;
+    document.getElementById("loginBtn").onclick = async () => {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      const errEl = document.getElementById("loginError");
+      const btn = document.getElementById("loginBtn");
+      errEl.classList.add("hidden");
+      btn.textContent = "Accesso in corso…";
+      try{
+        await login(user, pass);
+        renderAdmin();
+      }catch(e){
+        btn.textContent = "Accedi";
+        errEl.textContent = e.message;
+        errEl.classList.remove("hidden");
+      }
+    };
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="admin-header">
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
+      <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
+    </div>
+    <div class="card" style="text-align:center">
+      <label class="field-label" style="text-align:center">Durata validità di default</label>
+      <p id="currentDurationDisplay" style="font-size:24px;font-weight:700;color:var(--text);margin:4px 0 18px">…</p>
+      <button class="btn btn-secondary btn-compact" id="changeDurationBtn">Cambia durata</button>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
+    </div>
+    <div id="coinList"></div>
+  `;
+
+  document.getElementById("logoutBtn").onclick = logout;
+  document.getElementById("createCoinBtn").onclick = handleCreateCoin;
+
+  loadDefaultDuration();
+  document.getElementById("changeDurationBtn").onclick = () => {
+    openDurationPicker(currentDefaultValue || 60, currentDefaultUnit || "days");
+  };
+
+  loadCoinList();
+}
+
+/* ============================================================
+   DURATA DI DEFAULT — display + drum picker
+   ============================================================ */
+let currentDefaultValue = 60;
+let currentDefaultUnit = "days"; // 'days' | 'weeks' | 'months'
+
+const UNIT_LABELS = {
+  days:   { singular: "giorno",    plural: "giorni" },
+  weeks:  { singular: "settimana", plural: "settimane" },
+  months: { singular: "mese",      plural: "mesi" }
+};
+
+const SEGMENT_TO_PGUNIT = { giorni: "days", settimane: "weeks", mesi: "months" };
+const PGUNIT_TO_SEGMENT = { days: "giorni", weeks: "settimane", months: "mesi" };
+
+function formatDurationDisplay(value, unit){
+  if(unit === "months" && value % 12 === 0){
+    const years = value / 12;
+    return `${years} ${years === 1 ? "anno" : "anni"}`;
+  }
+  const l = UNIT_LABELS[unit] || UNIT_LABELS.days;
+  return `${value} ${value === 1 ? l.singular : l.plural}`;
+}
+
+async function loadDefaultDuration(){
+  const display = document.getElementById("currentDurationDisplay");
+  try{
+    const value = await sbGetSetting("default_duration_value");
+    const unit = await sbGetSetting("default_duration_unit");
+    currentDefaultValue = parseInt(value, 10) || 60;
+    currentDefaultUnit = unit || "days";
+    display.textContent = formatDurationDisplay(currentDefaultValue, currentDefaultUnit);
+  }catch(e){
+    display.textContent = "Errore caricamento";
+  }
+}
+
+const DURATION_UNITS = {
+  giorni:    { label: "Giorni",    max: 31 },
+  settimane: { label: "Settimane", max: 52 },
+  mesi:      { label: "Mesi",      max: 12 }
+};
+
+function openDurationPicker(currentValue, currentUnitPg){
+  let selectedUnit = PGUNIT_TO_SEGMENT[currentUnitPg] || "giorni";
+  let selectedValue = Math.min(Math.max(currentValue, 1), DURATION_UNITS[selectedUnit].max);
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 18px">Cambia durata</p>
+      <div class="segmented" id="unitSegmented">
+        <button data-unit="giorni">Giorni</button>
+        <button data-unit="settimane">Settimane</button>
+        <button data-unit="mesi">Mesi</button>
+      </div>
+      <div class="drum-wrapper">
+        <div class="drum-highlight"></div>
+        <div class="drum" id="valueDrum"></div>
+      </div>
+      <p class="status-sub" id="durationPreview" style="margin-bottom:18px"></p>
+      <button class="btn btn-primary" id="confirmDurationBtn">Salva durata</button>
+      <button class="btn btn-secondary" id="cancelDurationBtn" style="margin-top:10px">Annulla</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const drumEl = document.getElementById("valueDrum");
+  const previewEl = document.getElementById("durationPreview");
+  const segmentedEl = document.getElementById("unitSegmented");
+
+  function updatePreview(){
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
+    previewEl.textContent = `Durata selezionata: ${formatDurationDisplay(selectedValue, pgUnit)}`;
+  }
+
+  function highlightSelectedItem(value){
+    drumEl.querySelectorAll(".drum-item").forEach(el => {
+      el.classList.toggle("selected", parseInt(el.dataset.value, 10) === value);
+    });
+  }
+
+  function buildDrum(unit, initial){
+    const max = DURATION_UNITS[unit].max;
+    let html = "";
+    for(let i = 1; i <= max; i++){
+      html += `<div class="drum-item" data-value="${i}">${i}</div>`;
+    }
+    drumEl.innerHTML = html;
+
+    const itemHeight = 44;
+    const idx = Math.min(Math.max(initial, 1), max) - 1;
+    drumEl.scrollTop = idx * itemHeight;
+    selectedValue = idx + 1;
+    highlightSelectedItem(selectedValue);
+    updatePreview();
+
+    let scrollTimeout;
+    drumEl.onscroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const rawIdx = Math.round(drumEl.scrollTop / itemHeight);
+        const clamped = Math.min(Math.max(rawIdx, 0), max - 1);
+        drumEl.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
+        selectedValue = clamped + 1;
+        highlightSelectedItem(selectedValue);
+        updatePreview();
+      }, 120);
+    };
+  }
+
+  function setActiveSegment(unit){
+    segmentedEl.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.unit === unit);
+    });
+  }
+
+  segmentedEl.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => {
+      selectedUnit = btn.dataset.unit;
+      setActiveSegment(selectedUnit);
+      buildDrum(selectedUnit, selectedValue);
+    };
+  });
+
+  setActiveSegment(selectedUnit);
+  buildDrum(selectedUnit, selectedValue);
+
+  document.getElementById("cancelDurationBtn").onclick = () => overlay.remove();
+  document.getElementById("confirmDurationBtn").onclick = async () => {
+    const btn = document.getElementById("confirmDurationBtn");
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
+    btn.textContent = "Salvataggio…";
+    try{
+      await sbSetSetting("default_duration_value", selectedValue);
+      await sbSetSetting("default_duration_unit", pgUnit);
+      currentDefaultValue = selectedValue;
+      currentDefaultUnit = pgUnit;
+      document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(selectedValue, pgUnit);
+      overlay.remove();
+
+      const hasActive = await sbHasActiveCoins();
+      if(hasActive){
+        showApplyScopeModal(async (applyToActive) => {
+          if(applyToActive){
+            try{
+              await sbApplyDurationToActiveCoins(selectedValue, pgUnit);
+            }catch(e){
+              alert("Errore durante l'aggiornamento delle monete già attive.");
+            }
+          }
+          loadCoinList();
+        });
+      }else{
+        loadCoinList();
+      }
+    }catch(e){
+      btn.textContent = "Salva durata";
+      alert("Errore durante il salvataggio.");
+    }
+  };
+}
+
+function showApplyScopeModal(onChoice){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px">Applicare anche alle monete già attive?</p>
+      <p>Le nuove attivazioni useranno comunque la nuova durata. Vuoi aggiornare anche la scadenza delle monete già attivate in precedenza, ricalcolata dalla loro data di attivazione originale?</p>
+      <button class="btn btn-primary" id="applyBothBtn">Sì, anche le già attive</button>
+      <button class="btn btn-secondary" id="applyFutureOnlyBtn" style="margin-top:10px">No, solo le future</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("applyBothBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(true);
+  };
+  document.getElementById("applyFutureOnlyBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(false);
+  };
+}
+
+async function loadCoinList(){
+  const listEl = document.getElementById("coinList");
+  listEl.innerHTML = `<div class="loading">Caricamento…</div>`;
+
+  let coins;
+  try{
+    coins = await sbSelectAllCoins();
+  }catch(e){
+    listEl.innerHTML = `<div class="error-text">Errore nel caricamento delle VirtualCoin.</div>`;
+    return;
+  }
+
+  if(!coins.length){
+    listEl.innerHTML = `<div class="loading">Nessuna VirtualCoin registrata.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = coins.map(c => coinRowHtml(c.id, c)).join("");
+
+  coins.forEach(c => {
+    const row = document.getElementById(`row-${cssId(c.id)}`);
+    row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
+    row.querySelector(".btn-reset").onclick = () => handleReset(c);
+  });
+}
+
+function cssId(id){ return id.replace(/[^a-zA-Z0-9_-]/g, "_"); }
+
+function statusBadge(coin){
+  const expiry = effectiveExpiry(coin);
+  if(!coin.first_scan_at) return `<span class="badge badge-gray">Mai usata</span>`;
+  if(expiry && new Date() < expiry) return `<span class="badge badge-green">Attiva</span>`;
+  return `<span class="badge badge-red">Scaduta</span>`;
+}
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("it-IT", { dateStyle:"short", timeStyle:"short" });
+}
+
+function derivedDurationLabel(coin){
+  if(!coin.first_scan_at){
+    return `${formatDurationDisplay(currentDefaultValue, currentDefaultUnit)} (non ancora attivata)`;
+  }
+  if(coin.duration_value && coin.duration_unit){
+    return formatDurationDisplay(coin.duration_value, coin.duration_unit);
+  }
+  return "—";
+}
+
+function generateSessionCode(){
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return code;
+}
+
+function fakeDisplayCode(id){
+  // Codice puramente estetico, stabile ma non riconducibile all'ID reale.
+  // Serve solo a non mostrare mai l'ID vero nelle schede prima dell'attivazione.
+  let hash = 0;
+  for(let i = 0; i < id.length; i++){
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[hash % CODE_CHARSET.length];
+    hash = Math.floor(hash / CODE_CHARSET.length) + i * 97;
+  }
+  return code;
+}
+
+function coinRowHtml(id, coin){
+  const expiry = effectiveExpiry(coin);
+  return `
+  <div class="coin-row" id="row-${cssId(id)}">
+    <div class="coin-row-top">
+      <div>
+        <div class="coin-row-id">${coin.session_code || fakeDisplayCode(id)}</div>
+        ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
+      </div>
+      ${statusBadge(coin)}
+    </div>
+    <div class="coin-row-meta">
+      Attivata il: ${fmtDate(coin.first_scan_at)}<br>
+      Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
+      <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+    </div>
+  </div>`;
+}
+
+async function handleCreateCoin(){
+  const btn = document.getElementById("createCoinBtn");
+  btn.textContent = "Generazione in corso…";
+  btn.disabled = true;
+
+  try{
+    let code;
+    let attempts = 0;
+    while(attempts < 5){
+      code = generateCoinId();
+      const existing = await sbSelectCoin(code);
+      if(!existing) break;
+      attempts++;
+    }
+    await sbInsertCoin(code, { session_code: generateSessionCode() });
+    showGeneratedLinkPopup(code);
+    loadCoinList();
+  }catch(e){
+    alert("Errore durante la generazione della VirtualCoin. Riprova.");
+  }finally{
+    btn.textContent = "Genera nuova VirtualCoin";
+    btn.disabled = false;
+  }
+}
+
+function showCoinLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">Link VirtualCoin</p>
+      <p style="margin-bottom:14px">Copia e scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyExistingLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeExistingLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyExistingLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyExistingLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeExistingLinkPopup").onclick = () => overlay.remove();
+}
+
+function showGeneratedLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(52,199,89,0.15);color:var(--green)">
+        ${icons.check}
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">VirtualCoin creata</p>
+      <p style="margin-bottom:14px">Scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeLinkPopup").onclick = () => overlay.remove();
+}
+
+function handleReset(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode() });
+    loadCoinList();
+  });
+}
+
+function confirmAction(message, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>${message}</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary btn-small" id="modalCancel">Annulla</button>
+        <button class="btn btn-danger btn-small" id="modalConfirm">Conferma</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  document.getElementById("modalConfirm").onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+(function init(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.has("admin")){
+    renderAdmin();
+  }else if(params.has("c")){
+    const coinId = params.get("c");
+    sessionStorage.setItem("vc_active_coin", coinId);
+    renderCoinView(coinId);
+  }else{
+    const rememberedCoin = sessionStorage.getItem("vc_active_coin");
+    if(rememberedCoin){
+      renderCoinView(rememberedCoin);
+    }else{
+      renderAdmin();
+    }
+  }
+})();
+</script>
+</body>
+</html>

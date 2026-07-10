@@ -1,0 +1,3971 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>NFC Coins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#322d4d;
+    --purple-deep:#241f39;
+    --purple-light:#4c4472;
+    --pink:#da739e;
+    --pink-dark:#c2597f;
+    --pink-soft:#e6a0bf;
+    --green:#34C759;
+    --red:#FF3B30;
+    --gray:#8E8E93;
+    --text:#F4F0F8;
+    --text-secondary:rgba(244,240,248,0.62);
+    --separator:rgba(255,255,255,0.14);
+    --glass-fill:rgba(255,255,255,0.07);
+    --glass-fill-strong:rgba(255,255,255,0.13);
+    --glass-border:rgba(255,255,255,0.18);
+  }
+  @font-face{
+    font-family: 'SpaceAge';
+    src: url('fonts/SpaceAge.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  .brand-title{
+    font-family:'SpaceAge', -apple-system, sans-serif;
+    font-size:30px; text-align:center; letter-spacing:2px;
+    margin:0 0 20px; font-weight:400;
+    background:linear-gradient(135deg, var(--pink), var(--purple-light));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(218,115,158,0.30), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(76,68,114,0.55), transparent 45%),
+      radial-gradient(circle at 20% 90%, rgba(218,115,158,0.16), transparent 45%),
+      radial-gradient(circle at 90% 85%, rgba(76,68,114,0.40), transparent 45%),
+      linear-gradient(180deg, var(--purple), var(--purple-deep));
+    background-repeat:no-repeat;
+    background-size:100% 100%;
+  }
+  #scrollContainer{
+    position:absolute; inset:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    display:flex; justify-content:center;
+    padding:calc(24px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  }
+  .wrap{width:100%; max-width:480px; position:relative;}
+
+  .card{
+    background:var(--glass-fill);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    border:1px solid var(--glass-border);
+    border-radius:30px; padding:30px 26px;
+    box-shadow:0 8px 32px rgba(31,38,135,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+    margin-bottom:16px;
+  }
+  input[type=text], input[type=password], input[type=number], input[type=datetime-local]{
+    width:100%; padding:16px 18px; border-radius:16px; border:1px solid var(--separator);
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(8px);
+    font-size:17px; color:var(--text); outline:none;
+    font-family:inherit; margin-bottom:12px;
+  }
+  input:focus{border-color:var(--pink); background:rgba(255,255,255,0.10);}
+  .field-label{
+    font-size:14px; color:var(--text-secondary); font-weight:600;
+    margin:0 0 6px 4px; display:block;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:100px; padding:16px 26px; font-size:17.5px;
+    font-weight:600; cursor:pointer; width:100%; font-family:inherit;
+    min-height:50px;
+    transition:transform .12s, opacity .12s;
+    backdrop-filter:blur(12px) saturate(160%);
+    -webkit-backdrop-filter:blur(12px) saturate(160%);
+  }
+  .btn:active{transform:scale(0.97); opacity:.85;}
+  .btn-compact{width:auto; padding:15px 32px;}
+  .btn-primary{
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark));
+    color:#fff; box-shadow:0 4px 14px rgba(218,115,158,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .btn-secondary{
+    background:rgba(255,255,255,0.08); color:var(--pink-soft);
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  .btn-danger{
+    background:rgba(255,59,48,0.15); color:var(--red);
+    border:1px solid rgba(255,59,48,0.25);
+  }
+  .btn-small{width:auto; padding:14px 20px; font-size:15.5px; border-radius:100px; min-height:46px;}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .btn-row .btn-small{flex:1; min-width:110px;}
+
+  .back-btn{
+    width:46px; height:46px; border-radius:50%; border:1px solid var(--glass-border);
+    background:var(--glass-fill-strong); backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    margin-bottom:18px; box-shadow:0 4px 14px rgba(31,38,135,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+    color:var(--pink-soft); transition:transform .12s;
+  }
+  .back-btn:active{transform:scale(0.9);}
+  .back-btn svg{width:20px; height:20px;}
+
+  .coin-status{text-align:center; padding:28px 0;}
+  .icon-circle{
+    width:116px; height:116px; border-radius:50%; margin:0 auto 24px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
+  }
+  .icon-circle svg{width:52px; height:52px;}
+  .icon-circle.result-icon{position:relative; overflow:hidden;}
+  .result-check{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    opacity:1;
+    animation: resultCheckFade .6s ease 1.15s forwards;
+  }
+  .result-coin-static{
+    position:absolute; top:50%; left:50%; width:118%; height:118%;
+    transform:translate(-50%,-50%);
+    object-fit:cover;
+    filter:drop-shadow(0 3px 8px rgba(230,160,20,0.35));
+    opacity:0;
+    animation: resultCoinFadeIn .6s ease 1.15s forwards;
+  }
+  @keyframes resultCheckFade{
+    0%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(0.85); }
+  }
+  @keyframes resultCoinFadeIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.85); }
+    100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .status-title{font-size:28px; font-weight:700; margin:0 0 8px; letter-spacing:-0.4px;}
+  .status-title-futuristic{
+    font-family:'SpaceAge', 'Orbitron', -apple-system, sans-serif;
+    font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    background:linear-gradient(135deg, #baffc9, var(--green));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 18px rgba(52,199,89,0.35);
+  }
+  .card-enter{
+    animation: cardEnterAnim .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes cardEnterAnim{
+    0%{ opacity:0; transform:translateY(10px) scale(0.98); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .status-sub{font-size:15px; color:var(--text-secondary); margin:0 0 22px;}
+  .date-block{
+    background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);
+    border-radius:18px; padding:14px 18px; margin:18px 8px 14px; text-align:left;
+  }
+  .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; font-size:13.5px;}
+  .date-row + .date-row{border-top:1px solid var(--separator);}
+  .date-row span{color:var(--text-secondary);}
+  .date-row strong{font-weight:600; text-align:right; font-size:13.5px;}
+  .note-text{
+    font-size:12px; color:var(--text-secondary); margin:0 0 4px; line-height:1.5;
+  }
+  .section-divider{
+    height:1px; background:var(--separator); margin:22px 0 20px; border:none;
+  }
+  .coin-id{
+    font-size:13px; color:var(--text-secondary); margin-top:18px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:rgba(255,255,255,0.07); display:inline-block; padding:8px 16px; border-radius:100px;
+    border:1px solid var(--glass-border);
+  }
+
+  /* ---------- coriandoli ---------- */
+  .confetti-piece{
+    position:fixed; border-radius:2px; pointer-events:none;
+  }
+
+  /* ---------- animazione moneta -> spunta (schermo intero) ---------- */
+  .coin-reveal{
+    position:fixed; inset:0; z-index:80;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:28px;
+  }
+  .coin-reveal-stage{
+    position:relative; width:116px; height:116px;
+    margin:0 auto 26px;
+    overflow:visible;
+  }
+  .coin-reveal-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+    filter:drop-shadow(0 10px 34px rgba(230,160,20,0.5));
+    animation: coinGrowFade 1.9s ease both;
+    z-index:2;
+  }
+  .coin-reveal-check{
+    position:absolute; top:50%; left:50%; width:116px; height:116px;
+    transform:translate(-50%,-50%) scale(0.5); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(52,199,89,0.15); color:var(--green);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
+    opacity:0;
+    animation: checkPopIn .45s cubic-bezier(.34,1.56,.64,1) 1.65s forwards;
+  }
+  .coin-reveal-check svg{width:52px; height:52px;}
+  @keyframes coinGrowFade{
+    0%{ opacity:0; transform:scale(0.5); }
+    22%{ opacity:1; transform:scale(1); }
+    75%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(1); }
+  }
+  @keyframes checkPopIn{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.5); }
+    100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .coin-reveal.reveal-exit{
+    animation: revealExit .4s ease both;
+  }
+  @keyframes revealExit{
+    0%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(0.97); }
+  }
+
+  .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
+  .duration-row{
+    display:flex; align-items:center; gap:10px;
+    margin:0 0 16px;
+  }
+  .duration-row-text{font-size:14.5px; color:var(--text-secondary);}
+  .duration-row-text strong{color:var(--text); font-weight:700;}
+  .icon-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; flex-shrink:0; padding:0;
+    background:rgba(255,255,255,0.10); border:1px solid var(--glass-border);
+    border-radius:50%; cursor:pointer;
+    color:var(--pink-soft); -webkit-tap-highlight-color:transparent;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
+    transition:transform .12s, opacity .12s;
+  }
+  .icon-btn:active{transform:scale(0.90); opacity:.8;}
+  .icon-btn svg{width:19px; height:19px;}
+  .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
+  .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
+  .badge-gray{background:rgba(255,255,255,0.10); color:var(--text-secondary);}
+  .badge-amber{background:rgba(255,149,0,0.15); color:#ff9f0a;}
+
+  /* ---------- dashboard statistiche ---------- */
+  .stats-grid{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px;
+  }
+  .stat-tile{
+    background:var(--glass-fill); border:1px solid var(--glass-border);
+    border-radius:20px; padding:18px 10px; text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
+  }
+  .stat-tile .stat-number{font-size:30px; font-weight:700; color:var(--text); line-height:1.1;}
+  .stat-tile .stat-label{font-size:11.5px; color:var(--text-secondary); margin-top:6px; line-height:1.3;}
+
+  h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
+  .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
+  .coin-row{
+    background:var(--glass-fill); backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border:1px solid var(--glass-border);
+    border-radius:24px; padding:20px; margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(31,38,135,0.08);
+    transform:translateZ(0);
+    will-change:transform;
+  }
+  .coin-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:18px; font-weight:700;}
+  .coin-row-label{font-size:15px; color:var(--text-secondary); margin-top:3px;}
+  .coin-row-meta{font-size:15px; color:var(--text-secondary); margin-top:12px; line-height:1.8;}
+  .hidden{display:none !important;}
+  .loading{text-align:center; color:var(--text-secondary); padding:40px 0; font-size:14px;}
+  .error-text{color:var(--red); font-size:13px; margin-top:6px;}
+  .inline-panel{margin-top:12px; padding-top:12px; border-top:1px solid var(--separator);}
+  .top-actions{display:flex; gap:8px; margin-bottom:16px;}
+  .top-actions .btn{width:auto; flex:1;}
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,17,32,0.55); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-box{
+    background:rgba(50,45,77,0.92); backdrop-filter:blur(28px) saturate(180%);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.22);
+    border-radius:24px; padding:26px; width:100%; max-width:340px; text-align:center;
+    box-shadow:0 16px 48px rgba(0,0,0,0.45);
+  }
+  .modal-box p{font-size:16px; color:var(--text); line-height:1.5; margin:8px 0 22px; font-weight:500;}
+  .qr-wrap{
+    width:200px; height:200px; margin:0 auto 16px;
+    background:#fff; border-radius:16px; padding:12px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.25);
+  }
+  .qr-wrap svg{width:100%; height:100%; display:block;}
+  .notice{
+    background:rgba(218,115,158,0.12); color:var(--pink-soft); font-size:12px; padding:10px 14px;
+    border-radius:14px; margin-bottom:16px; text-align:center;
+    border:1px solid rgba(218,115,158,0.25);
+  }
+
+  /* ---------- layout desktop: schede monete a griglia ---------- */
+  @media (min-width: 820px){
+    .wrap{max-width:960px;}
+    .wrap > .admin-header, .wrap > .card, .wrap > .top-actions{
+      max-width:480px; margin-left:auto; margin-right:auto;
+    }
+    #coinList{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+      gap:16px;
+      align-items:start;
+    }
+    #coinList .coin-row{margin-bottom:0;}
+    #coinList .coin-list-empty{
+      grid-column:1 / -1;
+      font-size:17px;
+    }
+  }
+  #coinList .coin-list-empty{text-align:center; font-size:15px;}
+
+  /* ---------- segmented control ---------- */
+  .segmented{
+    display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
+    padding:4px; gap:4px; margin-bottom:18px;
+  }
+  .segmented button{
+    flex:1; padding:11px 6px; border:none; border-radius:11px; background:transparent;
+    color:var(--text-secondary); font-weight:600; font-size:14.5px; cursor:pointer;
+    font-family:inherit; transition:background .15s, color .15s;
+  }
+  .segmented button.active{
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark)); color:#fff;
+  }
+
+  /* ---------- drum picker ---------- */
+  .drum-wrapper{ position:relative; height:154px; margin-bottom:20px; }
+  .drum{
+    height:154px; overflow-y:scroll; scroll-snap-type:y mandatory;
+    -webkit-overflow-scrolling:touch; padding:55px 0;
+    scrollbar-width:none;
+  }
+  .drum::-webkit-scrollbar{ display:none; }
+  .drum-item{
+    height:44px; display:flex; align-items:center; justify-content:center;
+    scroll-snap-align:center; font-size:19px; color:var(--text-secondary);
+    font-variant-numeric:tabular-nums;
+  }
+  .drum-item.selected{ color:var(--text); font-weight:700; font-size:25px; }
+  .drum-highlight{
+    position:absolute; top:55px; left:0; right:0; height:44px;
+    border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05); border-radius:12px; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="scrollContainer">
+  <div class="wrap" id="app">
+    <div class="loading">Caricamento…</div>
+  </div>
+</div>
+
+<script>
+/* qrcode-generator by Kazuhiko Arase — MIT License — usata per generare i QR code delle VirtualCoin senza dipendenze esterne */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+
+<script>
+// --- Connessione a Neon (Data API compatibile PostgREST + Neon Auth) ---
+// Il Data API URL include già "/rest/v1" in fondo: le chiamate alle tabelle
+// si costruiscono aggiungendo solo il nome tabella, es. `${NEON_DATA_API_URL}/nfc_coins`
+const NEON_DATA_API_URL = "https://ep-silent-cloud-at5smaxh.apirest.c-9.us-east-1.aws.neon.tech/neondb/rest/v1";
+const NEON_AUTH_URL = "https://ep-silent-cloud-at5smaxh.neonauth.c-9.us-east-1.aws.neon.tech/neondb/auth";
+const TABLE = "nfc_coins";
+
+// Wrapper attorno a fetch con timeout: se il server non risponde entro il
+// tempo limite, la richiesta viene interrotta e lancia un errore invece di
+// restare bloccata per sempre (evita schermate "Verifica in corso…" fisse).
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try{
+    return await fetch(url, { ...options, signal: controller.signal });
+  }catch(e){
+    if(e.name === "AbortError"){
+      throw new Error("Timeout: il server non risponde.");
+    }
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+const app = document.getElementById("app");
+const COIN_IMG = "images/coin.png";
+// Fallback mostrato se images/coin.png non viene trovata (percorso sbagliato,
+// file dimenticato nel repo): un semplice cerchio dorato al posto dell'icona
+// di immagine rotta, generato al volo senza bisogno di un altro file esterno.
+const COIN_FALLBACK_IMG = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4d78b"/><stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient></defs>
+    <circle cx="50" cy="50" r="46" fill="url(#g)" stroke="#8a6512" stroke-width="3"/>
+    <circle cx="50" cy="50" r="34" fill="none" stroke="#8a6512" stroke-width="2"/>
+    <text x="50" y="58" font-family="sans-serif" font-size="22" font-weight="700" fill="#8a6512" text-anchor="middle">VG</text>
+  </svg>`
+);
+
+// Identificativo del dispositivo, persistente su localStorage (non sessionStorage:
+// deve sopravvivere alla chiusura del browser). Serve a legare una VirtualCoin
+// al primo dispositivo che la attiva, per evitare che il link venga condiviso
+// e mostri "Attiva" anche su telefoni diversi da quello del possessore.
+// Se localStorage non è disponibile (Safari privato, alcune webview molto
+// restrittive), si usa un ID temporaneo solo in memoria: l'aggancio dispositivo
+// in quel caso non sopravvive alla chiusura del browser, ma l'app resta comunque
+// utilizzabile invece di bloccarsi con un errore.
+let _memoryDeviceId = null;
+function getDeviceId(){
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+  try{
+    let id = localStorage.getItem("vc_device_id");
+    if(!id){
+      id = newId();
+      localStorage.setItem("vc_device_id", id);
+    }
+    return id;
+  }catch(e){
+    if(!_memoryDeviceId) _memoryDeviceId = newId();
+    return _memoryDeviceId;
+  }
+}
+
+function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
+function isLoggedIn(){ return !!getAccessToken(); }
+
+async function authHeaders(){
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  const token = await getValidAccessToken();
+  if(token){
+    headers["Authorization"] = "Bearer " + token;
+  }
+  return headers;
+}
+
+// Chiede un JWT fresco a Neon Auth usando il token di sessione (più duraturo,
+// ottenuto al login) e lo legge dall'header di risposta "set-auth-jwt" —
+// il JWT NON arriva nel corpo della risposta ma in questo header.
+async function fetchFreshJwt(sessionToken){
+  const res = await fetchWithTimeout(`${NEON_AUTH_URL}/get-session`, {
+    method: "GET",
+    headers: { "Authorization": "Bearer " + sessionToken },
+    cache: "no-store"
+  });
+  if(!res.ok) return null;
+  return res.headers.get("set-auth-jwt");
+}
+
+function saveAccessToken(jwt){
+  sessionStorage.setItem("vc_access_token", jwt);
+  // I JWT di Neon Auth durano 15 minuti (900s): salvo quando scadrà per
+  // sapere quando è il momento di rinnovarlo.
+  sessionStorage.setItem("vc_access_token_expires_at", String(Date.now() + 15 * 60 * 1000));
+}
+
+// Restituisce un JWT valido, rinnovandolo in automatico se è scaduto o sta
+// per scadere, così una sessione admin più lunga di 15 minuti non si blocca
+// a metà lavoro.
+async function getValidAccessToken(){
+  const token = sessionStorage.getItem("vc_access_token");
+  if(!token) return null; // non loggato
+
+  const expiresAt = parseInt(sessionStorage.getItem("vc_access_token_expires_at") || "0", 10);
+  if(Date.now() < expiresAt - 60000){
+    return token; // ancora valido con un margine di sicurezza di 60s
+  }
+
+  const sessionToken = sessionStorage.getItem("vc_session_token");
+  if(!sessionToken) return token;
+
+  try{
+    const freshJwt = await fetchFreshJwt(sessionToken);
+    if(freshJwt){
+      saveAccessToken(freshJwt);
+      return freshJwt;
+    }
+  }catch(e){ /* se il rinnovo fallisce, si tenta comunque con il token esistente */ }
+
+  return token;
+}
+
+async function login(email, password){
+  // Passo 1: crea la sessione con email+password. La risposta contiene un
+  // token di sessione "opaco" (non un JWT), usato solo per il passo 2.
+  const signInRes = await fetchWithTimeout(`${NEON_AUTH_URL}/sign-in/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, rememberMe: true }),
+    cache: "no-store"
+  });
+  const signInData = await signInRes.json();
+  if(!signInRes.ok) throw new Error(signInData.message || signInData.error || "Credenziali non valide");
+
+  const sessionToken = signInData.token;
+  if(!sessionToken) throw new Error("Login riuscito ma token di sessione non trovato nella risposta.");
+
+  // Passo 2: scambia il token di sessione con il vero JWT da usare per il Data API.
+  const jwt = await fetchFreshJwt(sessionToken);
+  if(!jwt) throw new Error("Login riuscito ma non è stato possibile ottenere il token di accesso (JWT).");
+
+  sessionStorage.setItem("vc_session_token", sessionToken);
+  saveAccessToken(jwt);
+}
+
+function logout(){
+  sessionStorage.removeItem("vc_access_token");
+  sessionStorage.removeItem("vc_access_token_expires_at");
+  sessionStorage.removeItem("vc_session_token");
+  goHome();
+}
+
+async function sbSelectCoin(id){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: await authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+async function sbSessionCodeExists(sessionCode){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?session_code=eq.${encodeURIComponent(sessionCode)}&select=id&limit=1`, { headers: await authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows.length > 0;
+}
+async function sbSelectAllCoins(){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?select=*&order=id.asc`, { headers: await authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  return res.json();
+}
+async function sbHasActiveCoins(){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: await authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows.length > 0;
+}
+async function sbInsertCoin(id, extraFields = {}){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}`, {
+    method: "POST",
+    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
+    body: JSON.stringify({ id, ...extraFields }),
+    cache: "no-store"
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    const e = new Error(err.message || "Errore creazione");
+    e.code = err.code;
+    throw e;
+  }
+  const rows = await res.json();
+  return rows[0];
+}
+async function sbUpdateCoin(id, fields){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
+    body: JSON.stringify(fields),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento");
+  const rows = await res.json();
+  return rows[0];
+}
+// Variante "atomica" per l'aggancio del dispositivo: scrive SOLO se device_id
+// è ancora null sul server in quel preciso istante. Evita che due telefoni
+// che aprono lo stesso link quasi in contemporanea si "rubino" la moneta a
+// vicenda — chi arriva per primo vince, l'altro riceve un array vuoto.
+async function sbUpdateCoinIfDeviceNull(id, fields){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}&device_id=is.null`, {
+    method: "PATCH",
+    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
+    body: JSON.stringify(fields),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+async function sbDeleteCoin(id){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore eliminazione");
+}
+
+async function sbGetSetting(key){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/app_settings?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: await authHeaders(),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore lettura impostazioni");
+  const rows = await res.json();
+  return rows[0] ? rows[0].value : null;
+}
+async function sbSetSetting(key, value){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/app_settings?key=eq.${encodeURIComponent(key)}`, {
+    method: "PATCH",
+    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
+    body: JSON.stringify({ value: String(value) }),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore salvataggio impostazioni");
+  return res.json();
+}
+
+async function sbApplyDurationToActiveCoins(value, unit){
+  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/rpc/apply_duration_to_active_coins`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ p_value: value, p_unit: unit }),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento monete già attive");
+}
+
+function goHome(){ window.location.search = ""; }
+function goAdmin(){ window.location.search = "?admin=1"; }
+
+function backButtonHtml(){
+  return `<div class="back-btn" id="backBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </div>`;
+}
+function attachBackButton(handler){
+  const btn = document.getElementById("backBtn");
+  if(btn) btn.onclick = handler;
+}
+
+const icons = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>`,
+  gear: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`
+};
+
+const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // esclude 0/O/1/I per evitare ambiguità
+const CODE_LENGTH = 10;
+
+function computeChecksum(body){
+  let sum = 0;
+  for(let i = 0; i < body.length; i++){
+    sum += CODE_CHARSET.indexOf(body[i]) * (i + 7);
+  }
+  return CODE_CHARSET[sum % CODE_CHARSET.length];
+}
+
+function generateCoinId(){
+  let body = "";
+  for(let i = 0; i < CODE_LENGTH - 1; i++){
+    body += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return body + computeChecksum(body);
+}
+
+function isValidCoinFormat(id){
+  if(typeof id !== "string" || id.length !== CODE_LENGTH) return false;
+  const upper = id.toUpperCase();
+  for(const ch of upper){
+    if(!CODE_CHARSET.includes(ch)) return false;
+  }
+  const body = upper.slice(0, CODE_LENGTH - 1);
+  const checksum = upper.slice(CODE_LENGTH - 1);
+  return computeChecksum(body) === checksum;
+}
+
+function buildCoinUrl(code){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?c=${code}`;
+}
+
+// Genera un QR code come stringa SVG, usando la libreria qrcode-generator
+// incorporata sopra (nessuna dipendenza esterna, nessuna chiamata di rete).
+function generateQrSvg(text){
+  const qr = qrcode(0, "M"); // 0 = dimensione automatica, M = correzione errori media
+  qr.addData(text);
+  qr.make();
+  return qr.createSvgTag({ scalable: true, cellSize: 4, margin: 4 });
+}
+
+function effectiveExpiry(coin){
+  if(coin.expires_at) return new Date(coin.expires_at);
+  return null;
+}
+function fmtDateTime(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("it-IT", { dateStyle:"long", timeStyle:"medium" });
+}
+
+function launchConfetti(){
+  const colors = ["#007AFF","#34C759","#FF9500","#FF3B30","#AF52DE","#FFD60A","#5AC8FA"];
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.inset = "0";
+  container.style.pointerEvents = "none";
+  container.style.zIndex = "9999";
+  document.body.appendChild(container);
+
+  const count = 80;
+  let maxTotalTime = 0;
+
+  for(let i = 0; i < count; i++){
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    const size = 6 + Math.random() * 7;
+    piece.style.width = size + "px";
+    piece.style.height = (size * 1.6) + "px";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.left = (Math.random() * 100) + "vw";
+    piece.style.top = "-20px";
+    container.appendChild(piece);
+
+    // Caduta naturale: leggero ondeggiamento laterale invece di un tragitto rettilineo,
+    // come farebbe un vero coriandolo cadendo nell'aria.
+    const fallDistance = window.innerHeight + 60;
+    const swayAmount = 30 + Math.random() * 50;
+    const swayDirection = Math.random() < 0.5 ? 1 : -1;
+    const rotation = (Math.random() < 0.5 ? 1 : -1) * (280 + Math.random() * 400);
+    const duration = 3200 + Math.random() * 2200;
+    const delay = Math.random() * 900;
+
+    piece.animate([
+      { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1, offset: 0 },
+      { transform: `translate(${swayDirection * swayAmount}px, ${fallDistance * 0.35}px) rotate(${rotation * 0.3}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${-swayDirection * swayAmount * 0.6}px, ${fallDistance * 0.7}px) rotate(${rotation * 0.7}deg)`, opacity: 1, offset: 0.7 },
+      { transform: `translate(${swayDirection * swayAmount * 0.3}px, ${fallDistance}px) rotate(${rotation}deg)`, opacity: 0, offset: 1 }
+    ], {
+      duration,
+      delay,
+      easing: "ease-in",
+      fill: "forwards"
+    });
+
+    maxTotalTime = Math.max(maxTotalTime, duration + delay);
+  }
+
+  setTimeout(() => container.remove(), maxTotalTime + 200);
+}
+
+function showWelcomePopup(onOk){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.zIndex = "250";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(218,115,158,0.18);color:var(--pink-soft)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 2l2.6 6.6L21 10l-5 4.4L17.5 21 12 17.3 6.5 21 8 14.4 3 10l6.4-1.4z"/></svg>
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 8px">Complimenti!</p>
+      <p>Hai guadagnato una <strong>VirtualCoin</strong> che ti dà diritto a una partita gratis.</p>
+      <button class="btn btn-primary" id="welcomeOk">OK</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("welcomeOk").onclick = () => {
+    overlay.remove();
+    if(onOk) onOk();
+  };
+}
+
+// Mostra la moneta che cresce e dissolve, lasciando il posto al cerchio con la spunta verde
+function playCoinRevealAnimation(onDone){
+  app.innerHTML = `<div class="coin-reveal">
+    <div class="coin-reveal-stage">
+      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">
+      <div class="coin-reveal-check">${icons.check}</div>
+    </div>
+    <p class="status-sub" style="margin:0">Verifica in corso…</p>
+  </div>`;
+
+  // Sequenza conclusa: dissolvenza morbida della schermata con la spunta,
+  // poi si richiama la scheda finale (che entra con il suo fade-in)
+  setTimeout(() => {
+    const revealCard = app.querySelector(".coin-reveal");
+    if(revealCard) revealCard.classList.add("reveal-exit");
+    setTimeout(onDone, 380);
+  }, 2200);
+}
+
+async function renderCoinView(coinId){
+  // Ripulisce subito la barra indirizzi: il codice serve solo un istante
+  // per identificare la moneta, poi spariscono dall'URL visibile.
+  if(window.history && window.history.replaceState){
+    window.history.replaceState(null, "", window.location.pathname);
+  }
+
+  if(!isValidCoinFormat(coinId)){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">VirtualCoin non riconosciuta</p>
+      <p class="status-sub">Formato ID non valido.</p>
+      <div class="coin-id">${coinId}</div>
+    </div>`;
+    return;
+  }
+
+  app.innerHTML = `<div class="loading">Verifica in corso…</div>`;
+
+  let coin;
+  try{
+    coin = await sbSelectCoin(coinId);
+  }catch(e){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Errore di connessione</p>
+      <p class="status-sub">Impossibile contattare il server. Riprova.</p>
+    </div>`;
+    return;
+  }
+
+  let isFirstActivation = false;
+
+  if(!coin){
+    try{
+      const inserted = await sbInsertCoin(coinId, { device_id: getDeviceId() });
+      // Fallback: se la policy RLS non permette di rileggere la riga appena
+      // creata, Supabase risponde comunque "OK" ma senza dati. In quel caso
+      // continuiamo con un oggetto locale coerente con quanto appena scritto,
+      // invece di lasciare "coin" undefined e mandare in crash il resto.
+      coin = inserted || { id: coinId, device_id: getDeviceId(), first_scan_at: null, expires_at: null, session_code: null };
+      isFirstActivation = true;
+    }catch(e){
+      coin = await sbSelectCoin(coinId).catch(() => null);
+      if(!coin){
+        app.innerHTML = `<div class="card coin-status">
+          <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+          <p class="status-title">Errore</p>
+          <p class="status-sub">Non è stato possibile registrare questa VirtualCoin.</p>
+        </div>`;
+        return;
+      }
+    }
+  }else if(!coin.first_scan_at){
+    try{
+      const nowIso = new Date().toISOString();
+      const myDeviceId = getDeviceId();
+      const updated = await sbUpdateCoin(coinId, { first_scan_at: nowIso, device_id: myDeviceId });
+      coin = updated || { ...coin, first_scan_at: nowIso, device_id: myDeviceId };
+      isFirstActivation = true;
+    }catch(e){
+      app.innerHTML = `<div class="card coin-status">
+        <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+        <p class="status-title">Errore</p>
+        <p class="status-sub">Non è stato possibile attivare questa VirtualCoin.</p>
+      </div>`;
+      return;
+    }
+  }
+
+  // Moneta già attivata in precedenza: verifica che sia lo stesso dispositivo
+  // che l'ha attivata la prima volta, per evitare che il link condiviso mostri
+  // "Attiva" anche su telefoni diversi da quello del possessore originale.
+  if(!isFirstActivation){
+    const myDeviceId = getDeviceId();
+    if(!coin.device_id){
+      // Moneta senza dispositivo agganciato (creata prima di questa funzione,
+      // oppure sbloccata dallo staff dal pannello admin): la lega a questo dispositivo,
+      // ma solo se nessun altro telefono l'ha già fatto nel frattempo (scrittura atomica).
+      try{
+        const updated = await sbUpdateCoinIfDeviceNull(coinId, { device_id: myDeviceId });
+        if(updated){
+          coin = updated;
+        }else{
+          // Nessuna riga tornata indietro: o un altro dispositivo ha vinto la
+          // corsa nel frattempo, oppure (più spesso) la scrittura è andata a
+          // buon fine ma la policy RLS blocca la rilettura per l'anonimo.
+          // Verifichiamo lo stato reale con una lettura pulita prima di bloccare.
+          const recheck = await sbSelectCoin(coinId).catch(() => null);
+          if(recheck && recheck.device_id && recheck.device_id !== myDeviceId){
+            app.innerHTML = `<div class="card coin-status">
+              <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+              <p class="status-title">Dispositivo non riconosciuto</p>
+              <p class="status-sub">Questa VirtualCoin risulta già collegata a un altro dispositivo.</p>
+            </div>`;
+            return;
+          }
+          coin = recheck || { ...coin, device_id: myDeviceId };
+        }
+      }catch(e){ /* errore di rete: si procede comunque mostrando la scheda con i dati che abbiamo */ }
+    }else if(coin.device_id !== myDeviceId){
+      app.innerHTML = `<div class="card coin-status">
+        <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+        <p class="status-title">Dispositivo non riconosciuto</p>
+        <p class="status-sub">Questa VirtualCoin risulta già collegata a un altro dispositivo.</p>
+      </div>`;
+      return;
+    }
+  }
+
+  drawCoinStatus(coin, isFirstActivation);
+}
+
+function drawCoinStatus(coin, isFirstActivation){
+  if(!coin){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Errore</p>
+      <p class="status-sub">Non è stato possibile leggere i dati di questa VirtualCoin. Riprova tra qualche istante.</p>
+    </div>`;
+    return;
+  }
+
+  const expiry = effectiveExpiry(coin);
+  const now = new Date();
+
+  if(!expiry || now >= expiry){
+    app.innerHTML = `<div class="card coin-status">
+      <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+      <p class="status-title">Scaduta</p>
+      <p class="status-sub">La validità di questa VirtualCoin è terminata.</p>
+      <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
+    </div>`;
+    return;
+  }
+
+  // Solo alla PRIMA attivazione: coriandoli + popup -> animazione moneta -> scheda.
+  // Dalle visite successive: scheda diretta, senza animazioni, moneta già ferma.
+  if(isFirstActivation){
+    launchConfetti();
+    showWelcomePopup(() => {
+      playCoinRevealAnimation(() => renderActiveCard(coin, expiry, true));
+    });
+  }else{
+    renderActiveCard(coin, expiry, false);
+  }
+}
+
+function renderActiveCard(coin, expiry, animated){
+  // Contenuto del cerchio: se "animated" è true, parte dalla spunta e sfuma nella moneta;
+  // se false (visite successive), la moneta è già visibile e ferma, senza animazioni.
+  const iconInner = animated
+    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`
+    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`;
+
+  app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
+    <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
+      ${iconInner}
+    </div>
+    <p class="status-sub" style="margin-bottom:2px">Ecco la tua VirtualCoin</p>
+    <p class="status-title status-title-futuristic">Attiva</p>
+    <div class="date-block">
+      <div class="date-row"><span>Attivata il</span><strong>${fmtDateTime(coin.first_scan_at)}</strong></div>
+      <div class="date-row"><span>Scade il</span><strong>${fmtDateTime(expiry.toISOString())}</strong></div>
+    </div>
+    <p class="note-text">Dopo la data di scadenza la VirtualCoin non sarà più utilizzabile.</p>
+    <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
+
+    <div class="section-divider"></div>
+
+    <p class="status-sub" style="margin-bottom:16px">Vivi un'esperienza indimenticabile: scopri le nostre avventure e prenota subito il tuo posto.</p>
+    <button class="btn btn-primary btn-compact" id="bookAdventureBtn">Prenota la tua avventura</button>
+  </div>`;
+
+  document.getElementById("bookAdventureBtn").onclick = () => {
+    window.open("https://www.vrgprato.it/", "_blank");
+  };
+}
+
+function renderAdmin(){
+  if(!isLoggedIn()){
+    app.innerHTML = `
+      <p class="brand-title">VIRTUAL COIN</p>
+      <div class="card">
+        <h1>Accesso admin</h1>
+        <label class="field-label">Email</label>
+        <input type="text" id="loginUser" autocomplete="username">
+        <label class="field-label">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password">
+        <button class="btn btn-primary" id="loginBtn">Accedi</button>
+        <div class="error-text hidden" id="loginError"></div>
+      </div>`;
+    document.getElementById("loginBtn").onclick = async () => {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      const errEl = document.getElementById("loginError");
+      const btn = document.getElementById("loginBtn");
+      errEl.classList.add("hidden");
+      btn.textContent = "Accesso in corso…";
+      try{
+        await login(user, pass);
+        renderAdmin();
+      }catch(e){
+        btn.textContent = "Accedi";
+        errEl.textContent = e.message;
+        errEl.classList.remove("hidden");
+      }
+    };
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="admin-header">
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
+      <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
+    </div>
+    <div class="duration-row">
+      <span class="duration-row-text">Durata default: <strong id="currentDurationDisplay">…</strong></span>
+      <button type="button" class="icon-btn" id="changeDurationBtn" aria-label="Cambia durata default">${icons.gear}</button>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
+      <button class="btn btn-secondary" id="statsBtn">Statistiche</button>
+    </div>
+    <input type="text" id="coinSearchInput" placeholder="Cerca per codice o etichetta…" style="margin-bottom:12px">
+    <div class="segmented" id="coinFilterSegmented">
+      <button data-filter="all" class="active">Tutte</button>
+      <button data-filter="active">Attive</button>
+      <button data-filter="never">Mai usate</button>
+      <button data-filter="expired">Scadute</button>
+    </div>
+    <div id="coinList"></div>
+  `;
+
+  document.getElementById("logoutBtn").onclick = logout;
+  document.getElementById("createCoinBtn").onclick = handleCreateCoin;
+  document.getElementById("statsBtn").onclick = renderStats;
+  document.getElementById("coinSearchInput").oninput = () => renderFilteredCoinList();
+  document.querySelectorAll("#coinFilterSegmented button").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll("#coinFilterSegmented button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderFilteredCoinList();
+    };
+  });
+
+  loadDefaultDuration();
+  document.getElementById("changeDurationBtn").onclick = () => {
+    openDurationPicker(currentDefaultValue || 60, currentDefaultUnit || "days");
+  };
+
+  loadCoinList();
+}
+
+/* ============================================================
+   DURATA DI DEFAULT — display + drum picker
+   ============================================================ */
+let currentDefaultValue = 60;
+let currentDefaultUnit = "days"; // 'days' | 'weeks' | 'months'
+
+const UNIT_LABELS = {
+  days:   { singular: "giorno",    plural: "giorni" },
+  weeks:  { singular: "settimana", plural: "settimane" },
+  months: { singular: "mese",      plural: "mesi" }
+};
+
+const SEGMENT_TO_PGUNIT = { giorni: "days", settimane: "weeks", mesi: "months" };
+const PGUNIT_TO_SEGMENT = { days: "giorni", weeks: "settimane", months: "mesi" };
+
+function formatDurationDisplay(value, unit){
+  if(unit === "months" && value % 12 === 0){
+    const years = value / 12;
+    return `${years} ${years === 1 ? "anno" : "anni"}`;
+  }
+  const l = UNIT_LABELS[unit] || UNIT_LABELS.days;
+  return `${value} ${value === 1 ? l.singular : l.plural}`;
+}
+
+async function loadDefaultDuration(){
+  const display = document.getElementById("currentDurationDisplay");
+  try{
+    const value = await sbGetSetting("default_duration_value");
+    const unit = await sbGetSetting("default_duration_unit");
+    currentDefaultValue = parseInt(value, 10) || 60;
+    currentDefaultUnit = unit || "days";
+    display.textContent = formatDurationDisplay(currentDefaultValue, currentDefaultUnit);
+  }catch(e){
+    display.textContent = "Errore caricamento";
+  }
+}
+
+const DURATION_UNITS = {
+  giorni:    { label: "Giorni",    max: 31 },
+  settimane: { label: "Settimane", max: 52 },
+  mesi:      { label: "Mesi",      max: 12 }
+};
+
+function openDurationPicker(currentValue, currentUnitPg){
+  let selectedUnit = PGUNIT_TO_SEGMENT[currentUnitPg] || "giorni";
+  let selectedValue = Math.min(Math.max(currentValue, 1), DURATION_UNITS[selectedUnit].max);
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 18px">Cambia durata</p>
+      <div class="segmented" id="unitSegmented">
+        <button data-unit="giorni">Giorni</button>
+        <button data-unit="settimane">Settimane</button>
+        <button data-unit="mesi">Mesi</button>
+      </div>
+      <div class="drum-wrapper">
+        <div class="drum-highlight"></div>
+        <div class="drum" id="valueDrum"></div>
+      </div>
+      <p class="status-sub" id="durationPreview" style="margin-bottom:18px"></p>
+      <button class="btn btn-primary" id="confirmDurationBtn">Salva durata</button>
+      <button class="btn btn-secondary" id="cancelDurationBtn" style="margin-top:10px">Annulla</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const drumEl = document.getElementById("valueDrum");
+  const previewEl = document.getElementById("durationPreview");
+  const segmentedEl = document.getElementById("unitSegmented");
+
+  function updatePreview(){
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
+    previewEl.textContent = `Durata selezionata: ${formatDurationDisplay(selectedValue, pgUnit)}`;
+  }
+
+  function highlightSelectedItem(value){
+    drumEl.querySelectorAll(".drum-item").forEach(el => {
+      el.classList.toggle("selected", parseInt(el.dataset.value, 10) === value);
+    });
+  }
+
+  function buildDrum(unit, initial){
+    const max = DURATION_UNITS[unit].max;
+    let html = "";
+    for(let i = 1; i <= max; i++){
+      html += `<div class="drum-item" data-value="${i}">${i}</div>`;
+    }
+    drumEl.innerHTML = html;
+
+    const itemHeight = 44;
+    const idx = Math.min(Math.max(initial, 1), max) - 1;
+    drumEl.scrollTop = idx * itemHeight;
+    selectedValue = idx + 1;
+    highlightSelectedItem(selectedValue);
+    updatePreview();
+
+    let scrollTimeout;
+    drumEl.onscroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const rawIdx = Math.round(drumEl.scrollTop / itemHeight);
+        const clamped = Math.min(Math.max(rawIdx, 0), max - 1);
+        drumEl.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
+        selectedValue = clamped + 1;
+        highlightSelectedItem(selectedValue);
+        updatePreview();
+      }, 120);
+    };
+  }
+
+  function setActiveSegment(unit){
+    segmentedEl.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.unit === unit);
+    });
+  }
+
+  segmentedEl.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => {
+      selectedUnit = btn.dataset.unit;
+      setActiveSegment(selectedUnit);
+      buildDrum(selectedUnit, selectedValue);
+    };
+  });
+
+  setActiveSegment(selectedUnit);
+  buildDrum(selectedUnit, selectedValue);
+
+  document.getElementById("cancelDurationBtn").onclick = () => overlay.remove();
+  document.getElementById("confirmDurationBtn").onclick = async () => {
+    const btn = document.getElementById("confirmDurationBtn");
+    const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
+    btn.textContent = "Salvataggio…";
+    try{
+      await sbSetSetting("default_duration_value", selectedValue);
+      await sbSetSetting("default_duration_unit", pgUnit);
+      currentDefaultValue = selectedValue;
+      currentDefaultUnit = pgUnit;
+      document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(selectedValue, pgUnit);
+      overlay.remove();
+
+      const hasActive = await sbHasActiveCoins();
+      if(hasActive){
+        showApplyScopeModal(async (applyToActive) => {
+          if(applyToActive){
+            try{
+              await sbApplyDurationToActiveCoins(selectedValue, pgUnit);
+            }catch(e){
+              alert("Errore durante l'aggiornamento delle monete già attive.");
+            }
+          }
+          loadCoinList();
+        });
+      }else{
+        loadCoinList();
+      }
+    }catch(e){
+      btn.textContent = "Salva durata";
+      alert("Errore durante il salvataggio.");
+    }
+  };
+}
+
+function showApplyScopeModal(onChoice){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px">Applicare anche alle monete già attive?</p>
+      <p>Le nuove attivazioni useranno comunque la nuova durata. Vuoi aggiornare anche la scadenza delle monete già attivate in precedenza, ricalcolata dalla loro data di attivazione originale? <strong>Attenzione:</strong> questo sovrascrive la scadenza di TUTTE le monete attive, incluse eventuali durate assegnate singolarmente a monete specifiche.</p>
+      <button class="btn btn-primary" id="applyBothBtn">Sì, anche le già attive</button>
+      <button class="btn btn-secondary" id="applyFutureOnlyBtn" style="margin-top:10px">No, solo le future</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("applyBothBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(true);
+  };
+  document.getElementById("applyFutureOnlyBtn").onclick = async () => {
+    overlay.remove();
+    await onChoice(false);
+  };
+}
+
+// Calcola i numeri della dashboard a partire dall'elenco completo delle coin.
+function computeStats(coins){
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  let active = 0, neverUsed = 0, expired = 0, thisWeek = 0, thisMonth = 0;
+
+  coins.forEach(c => {
+    const expiry = effectiveExpiry(c);
+    if(!c.first_scan_at){
+      neverUsed++;
+    }else if(expiry && now >= expiry){
+      expired++;
+    }else{
+      active++;
+    }
+    if(c.first_scan_at){
+      const activatedAt = new Date(c.first_scan_at);
+      if(activatedAt >= weekAgo) thisWeek++;
+      if(activatedAt >= monthStart) thisMonth++;
+    }
+  });
+
+  return { total: coins.length, active, neverUsed, expired, thisWeek, thisMonth };
+}
+
+// Schermata dedicata alle statistiche (non un popup): stesso stile del resto
+// dell'app, con pulsante indietro per tornare alla lista coin.
+async function renderStats(){
+  app.innerHTML = `
+    ${backButtonHtml()}
+    <div class="admin-header">
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
+    </div>
+    <div class="loading">Caricamento…</div>
+  `;
+  attachBackButton(renderAdmin);
+
+  let coins;
+  try{
+    coins = await sbSelectAllCoins();
+  }catch(e){
+    app.innerHTML = `
+      ${backButtonHtml()}
+      <div class="admin-header">
+        <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
+      </div>
+      <div class="error-text">Errore nel caricamento delle statistiche.</div>
+    `;
+    attachBackButton(renderAdmin);
+    return;
+  }
+
+  const s = computeStats(coins);
+
+  app.innerHTML = `
+    ${backButtonHtml()}
+    <div class="admin-header">
+      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-tile"><div class="stat-number" style="color:var(--green)">${s.active}</div><div class="stat-label">Attive ora</div></div>
+      <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
+      <div class="stat-tile"><div class="stat-number">${s.thisWeek}</div><div class="stat-label">Attivate<br>questa settimana</div></div>
+    </div>
+  `;
+  attachBackButton(renderAdmin);
+}
+
+let allCoinsCache = [];
+
+async function loadCoinList(){
+  const listEl = document.getElementById("coinList");
+  listEl.innerHTML = `<div class="loading coin-list-empty">Caricamento…</div>`;
+
+  try{
+    allCoinsCache = await sbSelectAllCoins();
+  }catch(e){
+    listEl.innerHTML = `<div class="error-text coin-list-empty">Errore nel caricamento delle VirtualCoin.</div>`;
+    return;
+  }
+
+  renderFilteredCoinList();
+}
+
+// Applica ricerca testuale + filtro di stato alla cache locale delle coin,
+// senza richiedere una nuova chiamata a Supabase ogni volta.
+function renderFilteredCoinList(){
+  const listEl = document.getElementById("coinList");
+  if(!listEl) return;
+
+  if(!allCoinsCache.length){
+    listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin registrata.</div>`;
+    return;
+  }
+
+  const searchInput = document.getElementById("coinSearchInput");
+  const query = (searchInput ? searchInput.value.trim().toUpperCase() : "");
+  const activeFilterBtn = document.querySelector("#coinFilterSegmented button.active");
+  const filter = activeFilterBtn ? activeFilterBtn.dataset.filter : "all";
+
+  const now = new Date();
+  let coins = allCoinsCache.filter(c => {
+    if(query){
+      const displayCode = (c.session_code || fakeDisplayCode(c.id)).toUpperCase();
+      const label = (c.label || "").toUpperCase();
+      if(!displayCode.includes(query) && !label.includes(query)) return false;
+    }
+    const expiry = effectiveExpiry(c);
+    if(filter === "never" && c.first_scan_at) return false;
+    if(filter === "active" && (!c.first_scan_at || (expiry && now >= expiry))) return false;
+    if(filter === "expired" && !(c.first_scan_at && expiry && now >= expiry)) return false;
+    return true;
+  });
+
+  if(!coins.length){
+    listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin corrisponde alla ricerca.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = coins.map(c => coinRowHtml(c.id, c)).join("");
+
+  coins.forEach(c => {
+    const row = document.getElementById(`row-${cssId(c.id)}`);
+    row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
+    const manualBtn = row.querySelector(".btn-manual-activate");
+    if(manualBtn) manualBtn.onclick = () => handleManualActivate(c);
+    row.querySelector(".btn-unlock-device").onclick = () => handleUnlockDevice(c);
+    row.querySelector(".btn-reset").onclick = () => handleReset(c);
+  });
+}
+
+function cssId(id){ return id.replace(/[^a-zA-Z0-9_-]/g, "_"); }
+
+function statusBadge(coin){
+  const expiry = effectiveExpiry(coin);
+  if(!coin.first_scan_at) return `<span class="badge badge-gray">Mai usata</span>`;
+  if(expiry && new Date() >= expiry) return `<span class="badge badge-red">Scaduta</span>`;
+  if(!coin.device_id) return `<span class="badge badge-amber">Attiva · in attesa</span>`;
+  return `<span class="badge badge-green">Attiva</span>`;
+}
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("it-IT", { dateStyle:"short", timeStyle:"short" });
+}
+
+function derivedDurationLabel(coin){
+  if(!coin.first_scan_at){
+    return `${formatDurationDisplay(currentDefaultValue, currentDefaultUnit)} (non ancora attivata)`;
+  }
+  if(coin.duration_value && coin.duration_unit){
+    return formatDurationDisplay(coin.duration_value, coin.duration_unit);
+  }
+  return "—";
+}
+
+function generateSessionCode(){
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
+  }
+  return code;
+}
+
+// Genera un session_code garantito univoco, riprovando fino a 5 volte in
+// caso di collisione (evita che due clienti diversi vedano lo stesso codice).
+async function generateUniqueSessionCode(){
+  let sessionCode;
+  let attempts = 0;
+  while(attempts < 5){
+    sessionCode = generateSessionCode();
+    const codeTaken = await sbSessionCodeExists(sessionCode);
+    if(!codeTaken) break;
+    attempts++;
+  }
+  return sessionCode;
+}
+
+function fakeDisplayCode(id){
+  // Codice puramente estetico, stabile ma non riconducibile all'ID reale.
+  // Serve solo a non mostrare mai l'ID vero nelle schede prima dell'attivazione.
+  let hash = 0;
+  for(let i = 0; i < id.length; i++){
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  let code = "";
+  for(let i = 0; i < 6; i++){
+    code += CODE_CHARSET[hash % CODE_CHARSET.length];
+    hash = Math.floor(hash / CODE_CHARSET.length) + i * 97;
+  }
+  return code;
+}
+
+function coinRowHtml(id, coin){
+  const expiry = effectiveExpiry(coin);
+  return `
+  <div class="coin-row" id="row-${cssId(id)}">
+    <div class="coin-row-top">
+      <div>
+        <div class="coin-row-id">${coin.session_code || fakeDisplayCode(id)}</div>
+        ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
+      </div>
+      ${statusBadge(coin)}
+    </div>
+    <div class="coin-row-meta">
+      Attivata il: ${fmtDate(coin.first_scan_at)}<br>
+      Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
+      ${!coin.first_scan_at ? `<button class="btn btn-secondary btn-small btn-manual-activate">Attiva senza NFC</button>` : ""}
+      <button class="btn btn-secondary btn-small btn-unlock-device">Sblocca dispositivo</button>
+      <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+    </div>
+  </div>`;
+}
+
+async function handleCreateCoin(){
+  const btn = document.getElementById("createCoinBtn");
+  btn.textContent = "Generazione in corso…";
+  btn.disabled = true;
+
+  try{
+    let code;
+    let attempts = 0;
+    while(attempts < 5){
+      code = generateCoinId();
+      const existing = await sbSelectCoin(code);
+      if(!existing) break;
+      attempts++;
+    }
+
+    let sessionCode = await generateUniqueSessionCode();
+
+    await sbInsertCoin(code, { session_code: sessionCode });
+    showGeneratedLinkPopup(code);
+    loadCoinList();
+  }catch(e){
+    alert("Errore durante la generazione della VirtualCoin. Riprova.");
+  }finally{
+    btn.textContent = "Genera nuova VirtualCoin";
+    btn.disabled = false;
+  }
+}
+
+function showCoinLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">Link VirtualCoin</p>
+      <p style="margin-bottom:14px">Copia e scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyExistingLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeExistingLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyExistingLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyExistingLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeExistingLinkPopup").onclick = () => overlay.remove();
+}
+
+function showGeneratedLinkPopup(code){
+  const url = buildCoinUrl(code);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:72px;height:72px;margin-bottom:14px;background:rgba(52,199,89,0.15);color:var(--green)">
+        ${icons.check}
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">VirtualCoin creata</p>
+      <p style="margin-bottom:14px">Scrivi questo link sul tag NFC:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <button class="btn btn-primary" id="copyLinkBtn" style="margin-top:16px">Copia link</button>
+      <button class="btn btn-secondary" id="closeLinkPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeLinkPopup").onclick = () => overlay.remove();
+}
+
+function handleReset(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  const doReset = async () => {
+    const newSessionCode = await generateUniqueSessionCode();
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: newSessionCode, device_id: null });
+    loadCoinList();
+  };
+  confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, doReset);
+}
+
+function handleManualActivate(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Attivare "${currentCode}" senza NFC? Utile per un cliente il cui telefono non legge gli NFC. La moneta risulterà subito attiva, ma non verrà agganciata a nessun dispositivo: sarà il primo telefono che apre il link a diventarne il proprietario, esattamente come per una prima attivazione normale.`, async () => {
+    const updated = await sbUpdateCoin(coin.id, { first_scan_at: new Date().toISOString() });
+    loadCoinList();
+    showManualActivationPopup(updated || coin);
+  });
+}
+
+// Popup mostrato SOLO dopo "Attiva senza NFC": QR code da far inquadrare al
+// cliente (apre direttamente la scheda della sua VirtualCoin) più un link
+// copiabile in alternativa. Il codice mostrato è quello estetico/fake, il
+// link e il QR incorporano invece l'ID reale della coin.
+function showManualActivationPopup(coin){
+  const displayCode = coin.session_code || fakeDisplayCode(coin.id);
+  const url = buildCoinUrl(coin.id);
+  const qrSvg = generateQrSvg(url);
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="icon-circle" style="width:64px;height:64px;margin-bottom:12px;background:rgba(52,199,89,0.15);color:var(--green)">
+        ${icons.check}
+      </div>
+      <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">VirtualCoin attivata</p>
+      <p style="margin-bottom:14px">Codice: <strong>${displayCode}</strong></p>
+      <div class="qr-wrap">${qrSvg}</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Fai inquadrare questo QR code al cliente per aprire subito la sua VirtualCoin, oppure copia il link qui sotto.</p>
+      <button class="btn btn-primary" id="copyManualActivationLinkBtn">Copia link</button>
+      <button class="btn btn-secondary" id="closeManualActivationPopup" style="margin-top:10px">Chiudi</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("copyManualActivationLinkBtn").onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById("copyManualActivationLinkBtn").textContent = "Copiato!";
+    });
+  };
+  document.getElementById("closeManualActivationPopup").onclick = () => overlay.remove();
+}
+
+function handleUnlockDevice(coin){
+  const currentCode = coin.session_code || fakeDisplayCode(coin.id);
+  confirmAction(`Sbloccare il dispositivo collegato a "${currentCode}"? Il prossimo telefono che apre il link diventerà il nuovo proprietario della VirtualCoin (utile se il cliente ha cambiato telefono).`, async () => {
+    await sbUpdateCoin(coin.id, { device_id: null });
+    loadCoinList();
+  });
+}
+
+function confirmAction(message, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>${message}</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary btn-small" id="modalCancel">Annulla</button>
+        <button class="btn btn-danger btn-small" id="modalConfirm">Conferma</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  document.getElementById("modalConfirm").onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+// Variante rinforzata: richiede di scrivere esattamente il codice della coin
+// per abilitare il pulsante di conferma. Usata solo per azioni distruttive
+// su monete GIA' USATE da un cliente reale (dati che andrebbero persi per sempre).
+function confirmActionTyped(message, expectedCode, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>${message}</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin:-10px 0 10px">Scrivi <strong>${expectedCode}</strong> per confermare:</p>
+      <input type="text" id="confirmTypedInput" autocomplete="off" autocapitalize="characters" style="text-align:center;letter-spacing:2px;font-weight:700;margin-bottom:14px">
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary btn-small" id="modalCancel">Annulla</button>
+        <button class="btn btn-danger btn-small" id="modalConfirm" disabled style="opacity:.4">Conferma</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = document.getElementById("confirmTypedInput");
+  const confirmBtn = document.getElementById("modalConfirm");
+  input.oninput = () => {
+    const match = input.value.trim().toUpperCase() === expectedCode.toUpperCase();
+    confirmBtn.disabled = !match;
+    confirmBtn.style.opacity = match ? "1" : ".4";
+  };
+  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  confirmBtn.onclick = () => {
+    if(confirmBtn.disabled) return;
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+(function init(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.has("admin")){
+    renderAdmin();
+  }else if(params.has("c")){
+    const coinId = params.get("c");
+    sessionStorage.setItem("vc_active_coin", coinId);
+    renderCoinView(coinId);
+  }else{
+    const rememberedCoin = sessionStorage.getItem("vc_active_coin");
+    if(rememberedCoin){
+      renderCoinView(rememberedCoin);
+    }else{
+      renderAdmin();
+    }
+  }
+})();
+</script>
+</body>
+</html>

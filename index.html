@@ -2768,28 +2768,27 @@ async function authHeaders(){
 }
 
 // Chiede un JWT fresco a Neon Auth usando il token di sessione (più duraturo,
-// ottenuto al login) e lo legge dall'header di risposta "set-auth-jwt" —
-// il JWT NON arriva nel corpo della risposta ma in questo header.
+// ottenuto al login). Uso l'endpoint /token del plugin JWT di Better Auth,
+// che restituisce il JWT direttamente nel CORPO della risposta ({"token":"..."}) 
+// invece che in un header — evita il problema dei browser che non espongono
+// header custom nelle risposte cross-dominio.
 async function fetchFreshJwt(sessionToken){
-  const res = await fetchWithTimeout(`${NEON_AUTH_URL}/get-session`, {
+  const res = await fetchWithTimeout(`${NEON_AUTH_URL}/token`, {
     method: "GET",
     headers: { "Authorization": "Bearer " + sessionToken },
-    credentials: "include",
     cache: "no-store"
   });
 
   if(!res.ok){
     const body = await res.text().catch(() => "");
-    throw new Error(`get-session ha risposto ${res.status}: ${body.slice(0, 300) || "(corpo vuoto)"}`);
+    throw new Error(`/token ha risposto ${res.status}: ${body.slice(0, 300) || "(corpo vuoto)"}`);
   }
 
-  const jwt = res.headers.get("set-auth-jwt");
-  if(!jwt){
-    let visibleHeaders = [];
-    try{ for(const key of res.headers.keys()) visibleHeaders.push(key); }catch(e){}
-    throw new Error(`get-session ha risposto OK ma senza l'header "set-auth-jwt". Header visibili al browser: ${visibleHeaders.join(", ") || "nessuno (probabile blocco CORS sull'header)"}`);
+  const data = await res.json();
+  if(!data.token){
+    throw new Error(`/token ha risposto OK ma senza il campo "token": ${JSON.stringify(data).slice(0, 300)}`);
   }
-  return jwt;
+  return data.token;
 }
 
 function saveAccessToken(jwt){

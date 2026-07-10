@@ -2774,10 +2774,22 @@ async function fetchFreshJwt(sessionToken){
   const res = await fetchWithTimeout(`${NEON_AUTH_URL}/get-session`, {
     method: "GET",
     headers: { "Authorization": "Bearer " + sessionToken },
+    credentials: "include",
     cache: "no-store"
   });
-  if(!res.ok) return null;
-  return res.headers.get("set-auth-jwt");
+
+  if(!res.ok){
+    const body = await res.text().catch(() => "");
+    throw new Error(`get-session ha risposto ${res.status}: ${body.slice(0, 300) || "(corpo vuoto)"}`);
+  }
+
+  const jwt = res.headers.get("set-auth-jwt");
+  if(!jwt){
+    let visibleHeaders = [];
+    try{ for(const key of res.headers.keys()) visibleHeaders.push(key); }catch(e){}
+    throw new Error(`get-session ha risposto OK ma senza l'header "set-auth-jwt". Header visibili al browser: ${visibleHeaders.join(", ") || "nessuno (probabile blocco CORS sull'header)"}`);
+  }
+  return jwt;
 }
 
 function saveAccessToken(jwt){

@@ -131,13 +131,14 @@
   /* Header di pagina unificato: titolo sempre centrato, alla stessa altezza
      di un eventuale pulsante indietro a sinistra o azioni a destra (46px). */
   .page-header{
-    position:relative; display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; gap:8px;
     min-height:46px; margin-bottom:22px;
   }
-  .page-header-title{margin:0; text-align:center; white-space:nowrap;}
-  .page-header-side{position:absolute; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:10px;}
-  .page-header-left{left:0;}
-  .page-header-right{right:0;}
+  .page-header-title{
+    flex:1 1 auto; min-width:0; margin:0; text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .page-header-side{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
 
   .coin-status{text-align:center; padding:28px 0;}
   .icon-circle{
@@ -320,9 +321,9 @@
   .calendar-cell-empty{visibility:hidden;}
   .calendar-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .calendar-month-label{flex:1; text-align:center;}
-  .icon-btn-sm{width:34px; height:34px;}
-  .icon-btn-xs{width:30px; height:30px;}
-  .icon-btn-xs svg{width:15px; height:15px;}
+  .icon-btn-sm{width:38px; height:38px;}
+  .icon-btn-xs{width:34px; height:34px;}
+  .icon-btn-xs svg{width:16px; height:16px;}
   .coin-row-top-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
   .btn-delete-coin{color:var(--red); background:rgba(255,59,48,0.10); border-color:rgba(255,59,48,0.22);}
   .icon-btn-sm svg{width:16px; height:16px;}
@@ -363,19 +364,16 @@
   .server-led.server-led-online{background:var(--green); box-shadow:0 0 7px var(--green);}
   .server-led.server-led-offline{background:var(--red); box-shadow:0 0 7px var(--red);}
   .coin-row{
-    background:var(--glass-fill); backdrop-filter:blur(14px) saturate(160%);
-    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    background:var(--glass-fill);
     border:1px solid var(--glass-border);
     border-radius:20px; padding:16px 18px; margin-bottom:12px;
     box-shadow:0 4px 16px rgba(31,38,135,0.08);
-    transform:translateZ(0);
-    will-change:transform;
   }
   .coin-row-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:17px; font-weight:700;}
   .coin-row .btn-row{margin-top:12px; gap:8px;}
   .coin-row .btn-row .btn-small{
-    padding:11px 14px; font-size:14px; min-height:42px; min-width:0;
+    padding:14px 17px; font-size:15.5px; min-height:49px; min-width:0;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   .coin-row-label{font-size:13.5px; color:var(--text-secondary); margin-top:2px;}
@@ -483,7 +481,7 @@
   #coinList.coin-list-as-list .coin-row-meta{margin-top:4px; line-height:1.4; font-size:12px;}
   #coinList.coin-list-as-list .btn-row{margin-top:8px; gap:6px; flex-wrap:wrap;}
   #coinList.coin-list-as-list .btn-row .btn-small{
-    flex:0 0 auto; padding:8px 13px; font-size:12.5px; min-height:38px; min-width:0; width:auto;
+    flex:1 1 0; min-width:105px; padding:10px 15px; font-size:13.5px; min-height:42px;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   #coinList.coin-list-as-list .badge{padding:4px 11px; font-size:11.5px;}
@@ -3898,8 +3896,8 @@ async function renderStats(){
     ${pageHeaderHtml("Statistiche", { showBack: true })}
     <div class="stats-grid">
       <div class="stat-tile"><div class="stat-number" style="color:var(--green)">${s.active}</div><div class="stat-label">Attive ora</div></div>
-      <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
       <div class="stat-tile"><div class="stat-number">${s.thisWeek}</div><div class="stat-label">Attivate<br>questa settimana</div></div>
+      <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
     </div>
     <div class="stats-content">
       <div class="stats-bestcards">
@@ -3980,7 +3978,6 @@ function renderFilteredCoinList(){
 
   coins.forEach(c => {
     const row = document.getElementById(`row-${cssId(c.id)}`);
-    row.querySelector(".btn-link").onclick = () => showCoinLinkPopup(c.id);
     const manualBtn = row.querySelector(".btn-manual-activate");
     if(manualBtn) manualBtn.onclick = () => handleManualActivate(c);
     row.querySelector(".btn-unlock-device").onclick = () => handleUnlockDevice(c);
@@ -4070,7 +4067,6 @@ function coinRowHtml(id, coin){
       Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
     </div>
     <div class="btn-row">
-      <button class="btn btn-secondary btn-small btn-link">Vedi link</button>
       ${!coin.first_scan_at ? `<button class="btn btn-secondary btn-small btn-manual-activate">Attiva senza NFC</button>` : ""}
       <button class="btn btn-secondary btn-small btn-unlock-device">Sblocca dispositivo</button>
       <button class="btn btn-secondary btn-small btn-reset">Azzera</button>

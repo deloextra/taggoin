@@ -60,7 +60,7 @@
   }
   #scrollContainer{
     position:absolute; inset:0;
-    overflow-y:auto;
+    overflow-y:auto; overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior-y:contain;
     display:flex; justify-content:center;
@@ -122,11 +122,22 @@
     background:var(--glass-fill-strong); backdrop-filter:blur(16px) saturate(180%);
     -webkit-backdrop-filter:blur(16px) saturate(180%);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
-    margin-bottom:18px; box-shadow:0 4px 14px rgba(31,38,135,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+    box-shadow:0 4px 14px rgba(31,38,135,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
     color:var(--pink-soft); transition:transform .12s;
   }
   .back-btn:active{transform:scale(0.9);}
   .back-btn svg{width:20px; height:20px;}
+
+  /* Header di pagina unificato: titolo sempre centrato, alla stessa altezza
+     di un eventuale pulsante indietro a sinistra o azioni a destra (46px). */
+  .page-header{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    min-height:46px; margin-bottom:22px;
+  }
+  .page-header-title{margin:0; text-align:center; white-space:nowrap;}
+  .page-header-side{position:absolute; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:10px;}
+  .page-header-left{left:0;}
+  .page-header-right{right:0;}
 
   .coin-status{text-align:center; padding:28px 0;}
   .icon-circle{
@@ -248,10 +259,10 @@
 
   .badge{display:inline-block; padding:7px 15px; border-radius:100px; font-size:14px; font-weight:700;}
   .duration-row{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     margin:0 0 14px;
   }
-  .duration-row-text{font-size:14.5px; color:var(--text-secondary);}
+  .duration-row-text{font-size:14.5px; color:var(--text-secondary); flex:1 1 auto; min-width:0;}
   .duration-row-text strong{color:var(--text); font-weight:700;}
   .icon-btn{
     display:inline-flex; align-items:center; justify-content:center;
@@ -363,7 +374,10 @@
   .coin-row-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   .coin-row-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:17px; font-weight:700;}
   .coin-row .btn-row{margin-top:12px; gap:8px;}
-  .coin-row .btn-row .btn-small{padding:9px 12px; font-size:13px; min-height:36px; min-width:0;}
+  .coin-row .btn-row .btn-small{
+    padding:11px 14px; font-size:14px; min-height:42px; min-width:0;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
   .coin-row-label{font-size:13.5px; color:var(--text-secondary); margin-top:2px;}
   .coin-row-meta{font-size:13.5px; color:var(--text-secondary); margin-top:10px; line-height:1.6;}
   .hidden{display:none !important;}
@@ -399,7 +413,7 @@
   /* ---------- layout desktop: schede monete a griglia ---------- */
   @media (min-width: 820px){
     .wrap{max-width:960px;}
-    .wrap > .admin-header, .wrap > .card, .wrap > .top-actions{
+    .wrap > .page-header, .wrap > .card, .wrap > .top-actions{
       max-width:480px; margin-left:auto; margin-right:auto;
     }
     #coinList{
@@ -469,7 +483,8 @@
   #coinList.coin-list-as-list .coin-row-meta{margin-top:4px; line-height:1.4; font-size:12px;}
   #coinList.coin-list-as-list .btn-row{margin-top:8px; gap:6px; flex-wrap:wrap;}
   #coinList.coin-list-as-list .btn-row .btn-small{
-    flex:0 0 auto; padding:6px 11px; font-size:11.5px; min-height:28px; min-width:0; width:auto;
+    flex:0 0 auto; padding:8px 13px; font-size:12.5px; min-height:38px; min-width:0; width:auto;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   #coinList.coin-list-as-list .badge{padding:4px 11px; font-size:11.5px;}
   #coinList.coin-list-as-list .coin-list-empty{padding:24px 0;}
@@ -3017,6 +3032,16 @@ function attachBackButton(handler){
   if(btn) btn.onclick = handler;
 }
 
+// Header di pagina unificato: titolo sempre centrato e alla stessa altezza
+// di un eventuale pulsante indietro (a sinistra) o di azioni (a destra).
+function pageHeaderHtml(title, { showBack = false, rightHtml = "" } = {}){
+  return `<div class="page-header">
+    <div class="page-header-side page-header-left">${showBack ? backButtonHtml() : ""}</div>
+    <h1 class="page-header-title" style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">${title}</h1>
+    <div class="page-header-side page-header-right">${rightHtml}</div>
+  </div>`;
+}
+
 const icons = {
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
   x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
@@ -3384,14 +3409,11 @@ function renderAdmin(){
   }
 
   app.innerHTML = `
-    <div class="admin-header">
-      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">VirtualCoin</h1>
-      <div class="header-actions">
-        <span class="server-led" id="serverLed" title="Verifica stato server…"></span>
-        <button type="button" class="icon-btn icon-btn-sm" id="reloadBtn" aria-label="Ricarica pagina">${icons.refresh}</button>
-        <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
-      </div>
-    </div>
+    ${pageHeaderHtml("VirtualCoin", { rightHtml: `
+      <span class="server-led" id="serverLed" title="Verifica stato server…"></span>
+      <button type="button" class="icon-btn icon-btn-sm" id="reloadBtn" aria-label="Ricarica pagina">${icons.refresh}</button>
+      <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
+    ` })}
     <div class="duration-row">
       <span class="duration-row-text">Durata default: <strong id="currentDurationDisplay">…</strong></span>
       <button type="button" class="icon-btn" id="changeDurationBtn" aria-label="Modifica durata default">${icons.pencil}</button>
@@ -3848,10 +3870,7 @@ function updateCalendarCard(activationsByDate){
 // dell'app, con pulsante indietro per tornare alla lista coin.
 async function renderStats(){
   app.innerHTML = `
-    ${backButtonHtml()}
-    <div class="admin-header">
-      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
-    </div>
+    ${pageHeaderHtml("Statistiche", { showBack: true })}
     <div class="loading">Caricamento…</div>
   `;
   attachBackButton(renderAdmin);
@@ -3861,10 +3880,7 @@ async function renderStats(){
     coins = await sbSelectAllCoins();
   }catch(e){
     app.innerHTML = `
-      ${backButtonHtml()}
-      <div class="admin-header">
-        <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
-      </div>
+      ${pageHeaderHtml("Statistiche", { showBack: true })}
       <div class="error-text">Errore nel caricamento delle statistiche.</div>
     `;
     attachBackButton(renderAdmin);
@@ -3879,10 +3895,7 @@ async function renderStats(){
   statsViewMonth = now.getMonth();
 
   app.innerHTML = `
-    ${backButtonHtml()}
-    <div class="admin-header">
-      <h1 style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">Statistiche</h1>
-    </div>
+    ${pageHeaderHtml("Statistiche", { showBack: true })}
     <div class="stats-grid">
       <div class="stat-tile"><div class="stat-number" style="color:var(--green)">${s.active}</div><div class="stat-label">Attive ora</div></div>
       <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>

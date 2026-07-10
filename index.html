@@ -265,6 +265,7 @@
   .badge-green{background:rgba(52,199,89,0.15); color:var(--green);}
   .badge-red{background:rgba(255,59,48,0.15); color:var(--red);}
   .badge-gray{background:rgba(255,255,255,0.10); color:var(--text-secondary);}
+  .badge-amber{background:rgba(255,149,0,0.15); color:#ff9f0a;}
 
   h1{font-size:30px; margin:0 0 4px; letter-spacing:-0.5px;}
   .admin-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
@@ -2699,18 +2700,42 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000){
 }
 const app = document.getElementById("app");
 const COIN_IMG = "images/coin.png";
+// Fallback mostrato se images/coin.png non viene trovata (percorso sbagliato,
+// file dimenticato nel repo): un semplice cerchio dorato al posto dell'icona
+// di immagine rotta, generato al volo senza bisogno di un altro file esterno.
+const COIN_FALLBACK_IMG = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4d78b"/><stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient></defs>
+    <circle cx="50" cy="50" r="46" fill="url(#g)" stroke="#8a6512" stroke-width="3"/>
+    <circle cx="50" cy="50" r="34" fill="none" stroke="#8a6512" stroke-width="2"/>
+    <text x="50" y="58" font-family="sans-serif" font-size="22" font-weight="700" fill="#8a6512" text-anchor="middle">VG</text>
+  </svg>`
+);
 
 // Identificativo del dispositivo, persistente su localStorage (non sessionStorage:
 // deve sopravvivere alla chiusura del browser). Serve a legare una VirtualCoin
 // al primo dispositivo che la attiva, per evitare che il link venga condiviso
 // e mostri "Attiva" anche su telefoni diversi da quello del possessore.
+// Se localStorage non è disponibile (Safari privato, alcune webview molto
+// restrittive), si usa un ID temporaneo solo in memoria: l'aggancio dispositivo
+// in quel caso non sopravvive alla chiusura del browser, ma l'app resta comunque
+// utilizzabile invece di bloccarsi con un errore.
+let _memoryDeviceId = null;
 function getDeviceId(){
-  let id = localStorage.getItem("vc_device_id");
-  if(!id){
-    id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
-    localStorage.setItem("vc_device_id", id);
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+  try{
+    let id = localStorage.getItem("vc_device_id");
+    if(!id){
+      id = newId();
+      localStorage.setItem("vc_device_id", id);
+    }
+    return id;
+  }catch(e){
+    if(!_memoryDeviceId) _memoryDeviceId = newId();
+    return _memoryDeviceId;
   }
-  return id;
 }
 
 function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
@@ -2753,6 +2778,12 @@ async function sbSelectCoin(id){
   const rows = await res.json();
   return rows[0] || null;
 }
+async function sbSessionCodeExists(sessionCode){
+  const res = await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/${TABLE}?session_code=eq.${encodeURIComponent(sessionCode)}&select=id&limit=1`, { headers: authHeaders(), cache: "no-store" });
+  if(!res.ok) throw new Error("Errore lettura dati");
+  const rows = await res.json();
+  return rows.length > 0;
+}
 async function sbSelectAllCoins(){
   const res = await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=id.asc`, { headers: authHeaders(), cache: "no-store" });
   if(!res.ok) throw new Error("Errore lettura dati");
@@ -2790,6 +2821,21 @@ async function sbUpdateCoin(id, fields){
   if(!res.ok) throw new Error("Errore aggiornamento");
   const rows = await res.json();
   return rows[0];
+}
+// Variante "atomica" per l'aggancio del dispositivo: scrive SOLO se device_id
+// è ancora null sul server in quel preciso istante. Evita che due telefoni
+// che aprono lo stesso link quasi in contemporanea si "rubino" la moneta a
+// vicenda — chi arriva per primo vince, l'altro riceve un array vuoto.
+async function sbUpdateCoinIfDeviceNull(id, fields){
+  const res = await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&device_id=is.null`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Prefer": "return=representation" },
+    body: JSON.stringify(fields),
+    cache: "no-store"
+  });
+  if(!res.ok) throw new Error("Errore aggiornamento");
+  const rows = await res.json();
+  return rows[0] || null;
 }
 async function sbDeleteCoin(id){
   const res = await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
@@ -2977,7 +3023,7 @@ function showWelcomePopup(onOk){
 function playCoinRevealAnimation(onDone){
   app.innerHTML = `<div class="coin-reveal">
     <div class="coin-reveal-stage">
-      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin">
+      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">
       <div class="coin-reveal-check">${icons.check}</div>
     </div>
     <p class="status-sub" style="margin:0">Verifica in corso…</p>
@@ -3069,11 +3115,29 @@ async function renderCoinView(coinId){
     const myDeviceId = getDeviceId();
     if(!coin.device_id){
       // Moneta senza dispositivo agganciato (creata prima di questa funzione,
-      // oppure sbloccata dallo staff dal pannello admin): la lega a questo dispositivo.
+      // oppure sbloccata dallo staff dal pannello admin): la lega a questo dispositivo,
+      // ma solo se nessun altro telefono l'ha già fatto nel frattempo (scrittura atomica).
       try{
-        const updated = await sbUpdateCoin(coinId, { device_id: myDeviceId });
-        coin = updated || { ...coin, device_id: myDeviceId };
-      }catch(e){ /* se fallisce, si procede comunque a mostrare la scheda */ }
+        const updated = await sbUpdateCoinIfDeviceNull(coinId, { device_id: myDeviceId });
+        if(updated){
+          coin = updated;
+        }else{
+          // Nessuna riga tornata indietro: o un altro dispositivo ha vinto la
+          // corsa nel frattempo, oppure (più spesso) la scrittura è andata a
+          // buon fine ma la policy RLS blocca la rilettura per l'anonimo.
+          // Verifichiamo lo stato reale con una lettura pulita prima di bloccare.
+          const recheck = await sbSelectCoin(coinId).catch(() => null);
+          if(recheck && recheck.device_id && recheck.device_id !== myDeviceId){
+            app.innerHTML = `<div class="card coin-status">
+              <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
+              <p class="status-title">Dispositivo non riconosciuto</p>
+              <p class="status-sub">Questa VirtualCoin risulta già collegata a un altro dispositivo.</p>
+            </div>`;
+            return;
+          }
+          coin = recheck || { ...coin, device_id: myDeviceId };
+        }
+      }catch(e){ /* errore di rete: si procede comunque mostrando la scheda con i dati che abbiamo */ }
     }else if(coin.device_id !== myDeviceId){
       app.innerHTML = `<div class="card coin-status">
         <div class="icon-circle" style="background:rgba(255,59,48,0.15);color:var(--red)">${icons.x}</div>
@@ -3126,8 +3190,8 @@ function renderActiveCard(coin, expiry, animated){
   // Contenuto del cerchio: se "animated" è true, parte dalla spunta e sfuma nella moneta;
   // se false (visite successive), la moneta è già visibile e ferma, senza animazioni.
   const iconInner = animated
-    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin">`
-    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;">`;
+    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`
+    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`;
 
   app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
@@ -3197,11 +3261,26 @@ function renderAdmin(){
     <div class="top-actions">
       <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
     </div>
+    <input type="text" id="coinSearchInput" placeholder="Cerca per codice o etichetta…" style="margin-bottom:12px">
+    <div class="segmented" id="coinFilterSegmented">
+      <button data-filter="all" class="active">Tutte</button>
+      <button data-filter="active">Attive</button>
+      <button data-filter="never">Mai usate</button>
+      <button data-filter="expired">Scadute</button>
+    </div>
     <div id="coinList"></div>
   `;
 
   document.getElementById("logoutBtn").onclick = logout;
   document.getElementById("createCoinBtn").onclick = handleCreateCoin;
+  document.getElementById("coinSearchInput").oninput = () => renderFilteredCoinList();
+  document.querySelectorAll("#coinFilterSegmented button").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll("#coinFilterSegmented button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderFilteredCoinList();
+    };
+  });
 
   loadDefaultDuration();
   document.getElementById("changeDurationBtn").onclick = () => {
@@ -3380,7 +3459,7 @@ function showApplyScopeModal(onChoice){
   overlay.innerHTML = `
     <div class="modal-box">
       <p style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px">Applicare anche alle monete già attive?</p>
-      <p>Le nuove attivazioni useranno comunque la nuova durata. Vuoi aggiornare anche la scadenza delle monete già attivate in precedenza, ricalcolata dalla loro data di attivazione originale?</p>
+      <p>Le nuove attivazioni useranno comunque la nuova durata. Vuoi aggiornare anche la scadenza delle monete già attivate in precedenza, ricalcolata dalla loro data di attivazione originale? <strong>Attenzione:</strong> questo sovrascrive la scadenza di TUTTE le monete attive, incluse eventuali durate assegnate singolarmente a monete specifiche.</p>
       <button class="btn btn-primary" id="applyBothBtn">Sì, anche le già attive</button>
       <button class="btn btn-secondary" id="applyFutureOnlyBtn" style="margin-top:10px">No, solo le future</button>
     </div>`;
@@ -3395,20 +3474,54 @@ function showApplyScopeModal(onChoice){
   };
 }
 
+let allCoinsCache = [];
+
 async function loadCoinList(){
   const listEl = document.getElementById("coinList");
   listEl.innerHTML = `<div class="loading coin-list-empty">Caricamento…</div>`;
 
-  let coins;
   try{
-    coins = await sbSelectAllCoins();
+    allCoinsCache = await sbSelectAllCoins();
   }catch(e){
     listEl.innerHTML = `<div class="error-text coin-list-empty">Errore nel caricamento delle VirtualCoin.</div>`;
     return;
   }
 
-  if(!coins.length){
+  renderFilteredCoinList();
+}
+
+// Applica ricerca testuale + filtro di stato alla cache locale delle coin,
+// senza richiedere una nuova chiamata a Supabase ogni volta.
+function renderFilteredCoinList(){
+  const listEl = document.getElementById("coinList");
+  if(!listEl) return;
+
+  if(!allCoinsCache.length){
     listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin registrata.</div>`;
+    return;
+  }
+
+  const searchInput = document.getElementById("coinSearchInput");
+  const query = (searchInput ? searchInput.value.trim().toUpperCase() : "");
+  const activeFilterBtn = document.querySelector("#coinFilterSegmented button.active");
+  const filter = activeFilterBtn ? activeFilterBtn.dataset.filter : "all";
+
+  const now = new Date();
+  let coins = allCoinsCache.filter(c => {
+    if(query){
+      const displayCode = (c.session_code || fakeDisplayCode(c.id)).toUpperCase();
+      const label = (c.label || "").toUpperCase();
+      if(!displayCode.includes(query) && !label.includes(query)) return false;
+    }
+    const expiry = effectiveExpiry(c);
+    if(filter === "never" && c.first_scan_at) return false;
+    if(filter === "active" && (!c.first_scan_at || (expiry && now >= expiry))) return false;
+    if(filter === "expired" && !(c.first_scan_at && expiry && now >= expiry)) return false;
+    return true;
+  });
+
+  if(!coins.length){
+    listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin corrisponde alla ricerca.</div>`;
     return;
   }
 
@@ -3430,6 +3543,7 @@ function statusBadge(coin){
   const expiry = effectiveExpiry(coin);
   if(!coin.first_scan_at) return `<span class="badge badge-gray">Mai usata</span>`;
   if(expiry && new Date() >= expiry) return `<span class="badge badge-red">Scaduta</span>`;
+  if(!coin.device_id) return `<span class="badge badge-amber">Attiva · in attesa</span>`;
   return `<span class="badge badge-green">Attiva</span>`;
 }
 
@@ -3454,6 +3568,20 @@ function generateSessionCode(){
     code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)];
   }
   return code;
+}
+
+// Genera un session_code garantito univoco, riprovando fino a 5 volte in
+// caso di collisione (evita che due clienti diversi vedano lo stesso codice).
+async function generateUniqueSessionCode(){
+  let sessionCode;
+  let attempts = 0;
+  while(attempts < 5){
+    sessionCode = generateSessionCode();
+    const codeTaken = await sbSessionCodeExists(sessionCode);
+    if(!codeTaken) break;
+    attempts++;
+  }
+  return sessionCode;
 }
 
 function fakeDisplayCode(id){
@@ -3509,7 +3637,10 @@ async function handleCreateCoin(){
       if(!existing) break;
       attempts++;
     }
-    await sbInsertCoin(code, { session_code: generateSessionCode() });
+
+    let sessionCode = await generateUniqueSessionCode();
+
+    await sbInsertCoin(code, { session_code: sessionCode });
     showGeneratedLinkPopup(code);
     loadCoinList();
   }catch(e){
@@ -3567,10 +3698,19 @@ function showGeneratedLinkPopup(code){
 
 function handleReset(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
-  confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, async () => {
-    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: generateSessionCode(), device_id: null });
+  const doReset = async () => {
+    const newSessionCode = await generateUniqueSessionCode();
+    await sbUpdateCoin(coin.id, { first_scan_at: null, expires_at: null, duration_value: null, duration_unit: null, session_code: newSessionCode, device_id: null });
     loadCoinList();
-  });
+  };
+
+  if(coin.first_scan_at){
+    // Coin già attivata/usata: azzerarla cancella per sempre lo storico di
+    // un cliente reale, quindi serve una conferma rinforzata (scrivere il codice).
+    confirmActionTyped(`Questa VirtualCoin risulta già usata da un cliente. Azzerarla cancellerà per sempre data di attivazione, scadenza e dispositivo collegato: l'azione non è reversibile.`, currentCode, doReset);
+  }else{
+    confirmAction(`Azzerare "${currentCode}"? Verrà generato un nuovo codice e tornerà riutilizzabile da zero.`, doReset);
+  }
 }
 
 function handleManualActivate(coin){
@@ -3636,6 +3776,38 @@ function confirmAction(message, onConfirm){
   document.body.appendChild(overlay);
   document.getElementById("modalCancel").onclick = () => overlay.remove();
   document.getElementById("modalConfirm").onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+// Variante rinforzata: richiede di scrivere esattamente il codice della coin
+// per abilitare il pulsante di conferma. Usata solo per azioni distruttive
+// su monete GIA' USATE da un cliente reale (dati che andrebbero persi per sempre).
+function confirmActionTyped(message, expectedCode, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>${message}</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin:-10px 0 10px">Scrivi <strong>${expectedCode}</strong> per confermare:</p>
+      <input type="text" id="confirmTypedInput" autocomplete="off" autocapitalize="characters" style="text-align:center;letter-spacing:2px;font-weight:700;margin-bottom:14px">
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary btn-small" id="modalCancel">Annulla</button>
+        <button class="btn btn-danger btn-small" id="modalConfirm" disabled style="opacity:.4">Conferma</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = document.getElementById("confirmTypedInput");
+  const confirmBtn = document.getElementById("modalConfirm");
+  input.oninput = () => {
+    const match = input.value.trim().toUpperCase() === expectedCode.toUpperCase();
+    confirmBtn.disabled = !match;
+    confirmBtn.style.opacity = match ? "1" : ".4";
+  };
+  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  confirmBtn.onclick = () => {
+    if(confirmBtn.disabled) return;
     overlay.remove();
     onConfirm();
   };

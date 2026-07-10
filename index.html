@@ -2688,12 +2688,33 @@ var qrcode = function() {
 
 </script>
 
+<script type="module">
+// SDK ufficiale Neon (Data API + Auth in un unico client), caricato da CDN.
+// Gestisce internamente tutte le sottigliezze di login/JWT/rinnovo token che
+// non riuscivamo a replicare a mano con fetch() diretto — è la stessa identica
+// libreria di query di Supabase (@supabase/postgrest-js) sotto al cofano.
+import { createClient, SupabaseAuthAdapter } from "https://cdn.jsdelivr.net/npm/@neondatabase/neon-js@0.6.2-beta/+esm";
+
+window.neonClient = createClient({
+  auth: {
+    adapter: SupabaseAuthAdapter(),
+    url: "https://ep-silent-cloud-at5smaxh.neonauth.c-9.us-east-1.aws.neon.tech/neondb/auth",
+    allowAnonymous: true // necessario per i clienti che scansionano la moneta senza login
+  },
+  dataApi: {
+    url: "https://ep-silent-cloud-at5smaxh.apirest.c-9.us-east-1.aws.neon.tech/neondb/rest/v1"
+  }
+});
+
+// Lo script principale (classico, non modulo) potrebbe già essere partito
+// prima che questo modulo finisca di caricarsi: gli segnaliamo quando siamo pronti.
+window.dispatchEvent(new Event("neonClientReady"));
+</script>
+
 <script>
-// --- Connessione a Neon (Data API compatibile PostgREST + Neon Auth) ---
-// Il Data API URL include già "/rest/v1" in fondo: le chiamate alle tabelle
-// si costruiscono aggiungendo solo il nome tabella, es. `${NEON_DATA_API_URL}/nfc_coins`
-const NEON_DATA_API_URL = "https://ep-silent-cloud-at5smaxh.apirest.c-9.us-east-1.aws.neon.tech/neondb/rest/v1";
-const NEON_AUTH_URL = "https://ep-silent-cloud-at5smaxh.neonauth.c-9.us-east-1.aws.neon.tech/neondb/auth";
+// --- Connessione a Neon: gestita dall'SDK ufficiale (window.neonClient),
+// creato nel <script type="module"> qui sopra. Le URL di Data API e Auth
+// sono configurate lì; qui serve solo il nome della tabella principale.
 const TABLE = "nfc_coins";
 
 // Wrapper attorno a fetch con timeout: se il server non risponde entro il
@@ -2753,209 +2774,83 @@ function getDeviceId(){
   }
 }
 
-function getAccessToken(){ return sessionStorage.getItem("vc_access_token"); }
-function isLoggedIn(){ return !!getAccessToken(); }
-
-async function authHeaders(){
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  const token = await getValidAccessToken();
-  if(token){
-    headers["Authorization"] = "Bearer " + token;
-  }
-  return headers;
-}
-
-// Chiede un JWT fresco a Neon Auth usando il token di sessione (più duraturo,
-// ottenuto al login). Uso l'endpoint /token del plugin JWT di Better Auth,
-// che restituisce il JWT direttamente nel CORPO della risposta ({"token":"..."}) 
-// invece che in un header — evita il problema dei browser che non espongono
-// header custom nelle risposte cross-dominio.
-async function fetchFreshJwt(sessionToken){
-  const res = await fetchWithTimeout(`${NEON_AUTH_URL}/token`, {
-    method: "GET",
-    headers: { "Authorization": "Bearer " + sessionToken },
-    cache: "no-store"
-  });
-
-  if(!res.ok){
-    const body = await res.text().catch(() => "");
-    throw new Error(`/token ha risposto ${res.status}: ${body.slice(0, 300) || "(corpo vuoto)"}`);
-  }
-
-  const data = await res.json();
-  if(!data.token){
-    throw new Error(`/token ha risposto OK ma senza il campo "token": ${JSON.stringify(data).slice(0, 300)}`);
-  }
-  return data.token;
-}
-
-function saveAccessToken(jwt){
-  sessionStorage.setItem("vc_access_token", jwt);
-  // I JWT di Neon Auth durano 15 minuti (900s): salvo quando scadrà per
-  // sapere quando è il momento di rinnovarlo.
-  sessionStorage.setItem("vc_access_token_expires_at", String(Date.now() + 15 * 60 * 1000));
-}
-
-// Restituisce un JWT valido, rinnovandolo in automatico se è scaduto o sta
-// per scadere, così una sessione admin più lunga di 15 minuti non si blocca
-// a metà lavoro.
-async function getValidAccessToken(){
-  const token = sessionStorage.getItem("vc_access_token");
-  if(!token) return null; // non loggato
-
-  const expiresAt = parseInt(sessionStorage.getItem("vc_access_token_expires_at") || "0", 10);
-  if(Date.now() < expiresAt - 60000){
-    return token; // ancora valido con un margine di sicurezza di 60s
-  }
-
-  const sessionToken = sessionStorage.getItem("vc_session_token");
-  if(!sessionToken) return token;
-
-  try{
-    const freshJwt = await fetchFreshJwt(sessionToken);
-    if(freshJwt){
-      saveAccessToken(freshJwt);
-      return freshJwt;
-    }
-  }catch(e){ /* se il rinnovo fallisce, si tenta comunque con il token esistente */ }
-
-  return token;
+async function isLoggedIn(){
+  const { data } = await window.neonClient.auth.getSession();
+  return !!(data && data.session);
 }
 
 async function login(email, password){
-  // Passo 1: crea la sessione con email+password. La risposta contiene un
-  // token di sessione "opaco" (non un JWT), usato solo per il passo 2.
-  const signInRes = await fetchWithTimeout(`${NEON_AUTH_URL}/sign-in/email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, rememberMe: true }),
-    cache: "no-store"
-  });
-  const signInData = await signInRes.json();
-  if(!signInRes.ok) throw new Error(signInData.message || signInData.error || "Credenziali non valide");
-
-  const sessionToken = signInData.token;
-  if(!sessionToken) throw new Error("Login riuscito ma token di sessione non trovato nella risposta.");
-
-  // Passo 2: scambia il token di sessione con il vero JWT da usare per il Data API.
-  const jwt = await fetchFreshJwt(sessionToken);
-  if(!jwt) throw new Error("Login riuscito ma non è stato possibile ottenere il token di accesso (JWT).");
-
-  sessionStorage.setItem("vc_session_token", sessionToken);
-  saveAccessToken(jwt);
+  const { error } = await window.neonClient.auth.signInWithPassword({ email, password });
+  if(error) throw new Error(error.message || "Credenziali non valide");
 }
 
-function logout(){
-  sessionStorage.removeItem("vc_access_token");
-  sessionStorage.removeItem("vc_access_token_expires_at");
-  sessionStorage.removeItem("vc_session_token");
+async function logout(){
+  await window.neonClient.auth.signOut().catch(() => {});
   goHome();
 }
 
 async function sbSelectCoin(id){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`, { headers: await authHeaders(), cache: "no-store" });
-  if(!res.ok) throw new Error("Errore lettura dati");
-  const rows = await res.json();
-  return rows[0] || null;
+  const { data, error } = await window.neonClient.from(TABLE).select("*").eq("id", id);
+  if(error) throw new Error(error.message || "Errore lettura dati");
+  return data[0] || null;
 }
 async function sbSessionCodeExists(sessionCode){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?session_code=eq.${encodeURIComponent(sessionCode)}&select=id&limit=1`, { headers: await authHeaders(), cache: "no-store" });
-  if(!res.ok) throw new Error("Errore lettura dati");
-  const rows = await res.json();
-  return rows.length > 0;
+  const { data, error } = await window.neonClient.from(TABLE).select("id").eq("session_code", sessionCode).limit(1);
+  if(error) throw new Error(error.message || "Errore lettura dati");
+  return data.length > 0;
 }
 async function sbSelectAllCoins(){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?select=*&order=id.asc`, { headers: await authHeaders(), cache: "no-store" });
-  if(!res.ok) throw new Error("Errore lettura dati");
-  return res.json();
+  const { data, error } = await window.neonClient.from(TABLE).select("*").order("id", { ascending: true });
+  if(error) throw new Error(error.message || "Errore lettura dati");
+  return data;
 }
 async function sbHasActiveCoins(){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?first_scan_at=not.is.null&select=id&limit=1`, { headers: await authHeaders(), cache: "no-store" });
-  if(!res.ok) throw new Error("Errore lettura dati");
-  const rows = await res.json();
-  return rows.length > 0;
+  const { data, error } = await window.neonClient.from(TABLE).select("id").not("first_scan_at", "is", null).limit(1);
+  if(error) throw new Error(error.message || "Errore lettura dati");
+  return data.length > 0;
 }
 async function sbInsertCoin(id, extraFields = {}){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}`, {
-    method: "POST",
-    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
-    body: JSON.stringify({ id, ...extraFields }),
-    cache: "no-store"
-  });
-  if(!res.ok){
-    const err = await res.json().catch(() => ({}));
-    const e = new Error(err.message || "Errore creazione");
-    e.code = err.code;
+  const { data, error } = await window.neonClient.from(TABLE).insert({ id, ...extraFields }).select();
+  if(error){
+    const e = new Error(error.message || "Errore creazione");
+    e.code = error.code;
     throw e;
   }
-  const rows = await res.json();
-  return rows[0];
+  return data[0];
 }
 async function sbUpdateCoin(id, fields){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
-    body: JSON.stringify(fields),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore aggiornamento");
-  const rows = await res.json();
-  return rows[0];
+  const { data, error } = await window.neonClient.from(TABLE).update(fields).eq("id", id).select();
+  if(error) throw new Error(error.message || "Errore aggiornamento");
+  return data[0];
 }
 // Variante "atomica" per l'aggancio del dispositivo: scrive SOLO se device_id
 // è ancora null sul server in quel preciso istante. Evita che due telefoni
 // che aprono lo stesso link quasi in contemporanea si "rubino" la moneta a
 // vicenda — chi arriva per primo vince, l'altro riceve un array vuoto.
 async function sbUpdateCoinIfDeviceNull(id, fields){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}&device_id=is.null`, {
-    method: "PATCH",
-    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
-    body: JSON.stringify(fields),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore aggiornamento");
-  const rows = await res.json();
-  return rows[0] || null;
+  const { data, error } = await window.neonClient.from(TABLE).update(fields).eq("id", id).is("device_id", null).select();
+  if(error) throw new Error(error.message || "Errore aggiornamento");
+  return data[0] || null;
 }
 async function sbDeleteCoin(id){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
-    method: "DELETE",
-    headers: await authHeaders(),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore eliminazione");
+  const { error } = await window.neonClient.from(TABLE).delete().eq("id", id);
+  if(error) throw new Error(error.message || "Errore eliminazione");
 }
 
 async function sbGetSetting(key){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/app_settings?key=eq.${encodeURIComponent(key)}&select=value`, {
-    headers: await authHeaders(),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore lettura impostazioni");
-  const rows = await res.json();
-  return rows[0] ? rows[0].value : null;
+  const { data, error } = await window.neonClient.from("app_settings").select("value").eq("key", key);
+  if(error) throw new Error(error.message || "Errore lettura impostazioni");
+  return data[0] ? data[0].value : null;
 }
 async function sbSetSetting(key, value){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/app_settings?key=eq.${encodeURIComponent(key)}`, {
-    method: "PATCH",
-    headers: { ...(await authHeaders()), "Prefer": "return=representation" },
-    body: JSON.stringify({ value: String(value) }),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore salvataggio impostazioni");
-  return res.json();
+  const { data, error } = await window.neonClient.from("app_settings").update({ value: String(value) }).eq("key", key).select();
+  if(error) throw new Error(error.message || "Errore salvataggio impostazioni");
+  return data;
 }
 
 async function sbApplyDurationToActiveCoins(value, unit){
-  const res = await fetchWithTimeout(`${NEON_DATA_API_URL}/rpc/apply_duration_to_active_coins`, {
-    method: "POST",
-    headers: await authHeaders(),
-    body: JSON.stringify({ p_value: value, p_unit: unit }),
-    cache: "no-store"
-  });
-  if(!res.ok) throw new Error("Errore aggiornamento monete già attive");
+  const { error } = await window.neonClient.rpc("apply_duration_to_active_coins", { p_value: value, p_unit: unit });
+  if(error) throw new Error(error.message || "Errore aggiornamento monete già attive");
 }
 
 function goHome(){ window.location.search = ""; }
@@ -3299,8 +3194,8 @@ function renderActiveCard(coin, expiry, animated){
   };
 }
 
-function renderAdmin(){
-  if(!isLoggedIn()){
+async function renderAdmin(){
+  if(!(await isLoggedIn())){
     app.innerHTML = `
       <p class="brand-title">VIRTUAL COIN</p>
       <div class="card">
@@ -3960,7 +3855,7 @@ function confirmActionTyped(message, expectedCode, onConfirm){
   };
 }
 
-(function init(){
+function init(){
   const params = new URLSearchParams(window.location.search);
   if(params.has("admin")){
     renderAdmin();
@@ -3976,7 +3871,17 @@ function confirmActionTyped(message, expectedCode, onConfirm){
       renderAdmin();
     }
   }
-})();
+}
+
+// Il client Neon (Data API + Auth) viene creato in un <script type="module">
+// separato più sopra, che carica l'SDK ufficiale da CDN — essendo un modulo,
+// si esegue DOPO questo script classico, quindi aspettiamo il suo segnale
+// prima di avviare l'app invece di dare per scontato che sia già pronto.
+if(window.neonClient){
+  init();
+}else{
+  window.addEventListener("neonClientReady", init, { once: true });
+}
 </script>
 </body>
 </html>

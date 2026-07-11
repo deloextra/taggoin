@@ -136,17 +136,18 @@
   }
   .page-header-title{
     flex:1 1 auto; min-width:0; margin:0; text-align:center;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    line-height:1.15;
   }
   .page-header-side{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
 
-  .coin-status{text-align:center; padding:28px 0;}
+  .coin-status{text-align:center; padding:32px 0;}
+  .card.coin-status{padding:38px 30px;}
   .icon-circle{
-    width:116px; height:116px; border-radius:50%; margin:0 auto 24px;
+    width:128px; height:128px; border-radius:50%; margin:0 auto 24px;
     display:flex; align-items:center; justify-content:center;
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 18px rgba(0,0,0,0.10);
   }
-  .icon-circle svg{width:52px; height:52px;}
+  .icon-circle svg{width:56px; height:56px;}
   .icon-circle.result-icon{position:relative; overflow:hidden;}
   .result-check{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -189,10 +190,10 @@
     background:rgba(255,255,255,0.06); border:1px solid var(--glass-border);
     border-radius:18px; padding:14px 18px; margin:18px 8px 14px; text-align:left;
   }
-  .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; font-size:13.5px;}
+  .date-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; font-size:14.5px;}
   .date-row + .date-row{border-top:1px solid var(--separator);}
   .date-row span{color:var(--text-secondary);}
-  .date-row strong{font-weight:600; text-align:right; font-size:13.5px;}
+  .date-row strong{font-weight:700; text-align:right; font-size:15px; color:var(--text);}
   .note-text{
     font-size:12px; color:var(--text-secondary); margin:0 0 4px; line-height:1.5;
   }
@@ -218,7 +219,7 @@
     text-align:center; padding:28px;
   }
   .coin-reveal-stage{
-    position:relative; width:116px; height:116px;
+    position:relative; width:128px; height:128px;
     margin:0 auto 26px;
     overflow:visible;
   }
@@ -231,7 +232,7 @@
     z-index:2;
   }
   .coin-reveal-check{
-    position:absolute; top:50%; left:50%; width:116px; height:116px;
+    position:absolute; top:50%; left:50%; width:128px; height:128px;
     transform:translate(-50%,-50%) scale(0.5); border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     background:rgba(52,199,89,0.15); color:var(--green);
@@ -239,7 +240,7 @@
     opacity:0;
     animation: checkPopIn .45s cubic-bezier(.34,1.56,.64,1) 1.8s forwards;
   }
-  .coin-reveal-check svg{width:52px; height:52px;}
+  .coin-reveal-check svg{width:56px; height:56px;}
   @keyframes coinGrowFade{
     0%{ opacity:0; transform:translate(-50%,-50%) scale(0.6); }
     25%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
@@ -260,14 +261,19 @@
 
   .badge{display:inline-block; padding:9px 18px; border-radius:100px; font-size:15px; font-weight:700;}
   .duration-row{
-    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
     margin:0 0 14px;
   }
-  .duration-row-text{font-size:14.5px; color:var(--text-secondary); flex:1 1 auto; min-width:0;}
+  .duration-row-text{
+    display:inline-flex; align-items:center;
+    background:rgba(255,255,255,0.07); border:1px solid var(--glass-border);
+    border-radius:100px; padding:11px 18px;
+    font-size:14px; color:var(--text-secondary); flex:0 1 auto; min-width:0;
+  }
   .duration-row-text strong{color:var(--text); font-weight:700;}
   .icon-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    width:46px; height:46px; flex-shrink:0; padding:0;
+    width:42px; height:42px; flex-shrink:0; padding:0;
     background:rgba(255,255,255,0.10); border:1px solid var(--glass-border);
     border-radius:50%; cursor:pointer;
     color:var(--pink-soft); -webkit-tap-highlight-color:transparent;
@@ -275,7 +281,7 @@
     transition:transform .12s, opacity .12s;
   }
   .icon-btn:active{transform:scale(0.90); opacity:.8;}
-  .icon-btn svg{width:22px; height:22px;}
+  .icon-btn svg{width:20px; height:20px;}
   .stats-pill-btn{
     display:inline-flex; align-items:center; gap:8px;
     background:rgba(255,255,255,0.07); border:1px solid var(--glass-border);
@@ -321,12 +327,14 @@
   .calendar-cell-empty{visibility:hidden;}
   .calendar-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .calendar-month-label{flex:1; text-align:center;}
-  .icon-btn-sm{width:38px; height:38px;}
+  .icon-btn-sm{width:46px; height:46px;}
   .icon-btn-xs{width:34px; height:34px;}
   .icon-btn-xs svg{width:16px; height:16px;}
   .coin-row-top-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .coin-row-id-row{display:flex; align-items:center; gap:6px;}
+  .btn-view-link{color:var(--pink-soft); background:rgba(255,255,255,0.08);}
   .btn-delete-coin{color:var(--red); background:rgba(255,59,48,0.10); border-color:rgba(255,59,48,0.22);}
-  .icon-btn-sm svg{width:16px; height:16px;}
+  .icon-btn-sm svg{width:19px; height:19px;}
 
   /* ---------- layout pagina statistiche ---------- */
   .stats-content{display:flex; flex-direction:column; gap:16px;}
@@ -378,6 +386,7 @@
   }
   .coin-row-label{font-size:13.5px; color:var(--text-secondary); margin-top:2px;}
   .coin-row-meta{font-size:13.5px; color:var(--text-secondary); margin-top:10px; line-height:1.6;}
+  .coin-row-duration{color:var(--text); font-weight:700;}
   .hidden{display:none !important;}
   .loading{text-align:center; color:var(--text-secondary); padding:40px 0; font-size:14px;}
   .error-text{color:var(--red); font-size:13px; margin-top:6px;}
@@ -405,6 +414,16 @@
     0%{ opacity:0; transform:scale(0.92) translateY(10px); }
     100%{ opacity:1; transform:scale(1) translateY(0); }
   }
+  .modal-overlay.closing{ animation: modalOverlayFadeOut .2s ease both; }
+  .modal-overlay.closing .modal-box{ animation: modalBoxPopOut .2s cubic-bezier(.4,0,1,1) both; }
+  @keyframes modalOverlayFadeOut{
+    0%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+  @keyframes modalBoxPopOut{
+    0%{ opacity:1; transform:scale(1) translateY(0); }
+    100%{ opacity:0; transform:scale(0.92) translateY(10px); }
+  }
   .modal-box p{font-size:16px; color:var(--text); line-height:1.5; margin:8px 0 22px; font-weight:500;}
   .qr-wrap{
     width:200px; height:200px; margin:0 auto 16px;
@@ -418,21 +437,26 @@
     border:1px solid rgba(218,115,158,0.25);
   }
 
-  /* ---------- layout desktop: schede monete a griglia ---------- */
+  /* ---------- layout desktop: schede monete "a mattoncini" (stile Pinterest) ---------- */
   @media (min-width: 820px){
     .wrap{max-width:960px;}
     .wrap > .page-header, .wrap > .card, .wrap > .top-actions{
       max-width:480px; margin-left:auto; margin-right:auto;
     }
-    #coinList{
-      display:grid;
-      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
-      gap:16px;
-      align-items:start;
+    /* Colonne fluide, ogni card alta quanto il suo contenuto — niente più
+       righe "sfalsate" per via di card con più o meno pulsanti. */
+    #coinList:not(.coin-list-as-list){
+      column-width:320px;
+      column-gap:16px;
     }
-    #coinList .coin-row{margin-bottom:0;}
-    #coinList .coin-list-empty{
-      grid-column:1 / -1;
+    #coinList:not(.coin-list-as-list) .coin-row{
+      break-inside:avoid;
+      margin-bottom:16px;
+      display:inline-block;
+      width:100%;
+    }
+    #coinList:not(.coin-list-as-list) .coin-list-empty{
+      column-span:all;
       font-size:17px;
     }
     #coinList.coin-list-as-list{
@@ -443,33 +467,39 @@
 
   /* ---------- segmented control ---------- */
   .segmented{
-    display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
+    position:relative;
+    display:flex; background:rgba(255,255,255,0.06); border-radius:100px;
     padding:4px; gap:4px; margin-bottom:18px;
   }
   .segmented button{
-    flex:1; padding:11px 6px; border:none; border-radius:11px; background:transparent;
+    position:relative; z-index:1;
+    flex:1; padding:11px 6px; border:none; border-radius:100px; background:transparent;
     color:var(--text-secondary); font-weight:600; font-size:14.5px; cursor:pointer;
-    font-family:inherit; transition:background .15s, color .15s;
+    font-family:inherit; transition:color .2s;
   }
-  .segmented button.active{
-    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark)); color:#fff;
+  .segmented button.active{ color:#fff; }
+  .segmented-thumb{
+    position:absolute; top:4px; bottom:4px; left:4px; z-index:0;
+    border-radius:100px;
+    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark));
+    transition:transform .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1);
   }
   .list-controls-row{display:flex; align-items:flex-start; gap:8px;}
   .list-controls-row .segmented{flex:1; margin-bottom:18px;}
   .view-toggle{
-    display:flex; background:rgba(255,255,255,0.06); border-radius:14px;
+    position:relative;
+    display:flex; background:rgba(255,255,255,0.06); border-radius:100px;
     padding:4px; gap:4px; flex-shrink:0;
   }
   .view-toggle button{
+    position:relative; z-index:1;
     display:flex; align-items:center; justify-content:center;
-    width:42px; height:42px; border:none; border-radius:11px; background:transparent;
+    width:42px; height:42px; border:none; border-radius:100px; background:transparent;
     color:var(--text-secondary); cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:background .15s, color .15s;
+    transition:color .2s;
   }
   .view-toggle button svg{width:19px; height:19px;}
-  .view-toggle button.active{
-    background:linear-gradient(180deg, var(--pink-soft), var(--pink-dark)); color:#fff;
-  }
+  .view-toggle button.active{ color:#fff; }
   /* vista "elenco": una colonna sola, righe più compatte, anche su desktop */
   /* Vista "elenco": un unico contenitore con bordo/sfondo, righe piatte
      separate da una linea sottile — non tante mini-card rimpicciolite. */
@@ -482,22 +512,38 @@
   }
   #coinList.coin-list-as-list .coin-row{
     background:none; border:none; box-shadow:none; border-radius:0;
-    padding:12px 0; margin-bottom:0;
+    padding:14px 0; margin-bottom:0;
     border-bottom:1px solid var(--separator);
   }
   #coinList.coin-list-as-list .coin-row:last-child{border-bottom:none;}
-  #coinList.coin-list-as-list .coin-row-id{font-size:14.5px;}
+  #coinList.coin-list-as-list .coin-row-top{cursor:pointer;}
+  #coinList.coin-list-as-list .coin-row-id{font-size:15px;}
   #coinList.coin-list-as-list .coin-row-label{font-size:12px;}
-  #coinList.coin-list-as-list .coin-row-meta{margin-top:4px; line-height:1.4; font-size:12px;}
-  #coinList.coin-list-as-list .btn-row{margin-top:8px; gap:6px; flex-wrap:wrap;}
-  #coinList.coin-list-as-list .btn-row{gap:8px;}
+  #coinList.coin-list-as-list .coin-row-details{
+    max-height:0; overflow:hidden;
+    transition:max-height .32s cubic-bezier(.4,0,.2,1);
+  }
+  #coinList.coin-list-as-list .coin-row.expanded .coin-row-details{
+    max-height:220px;
+  }
+  #coinList.coin-list-as-list .coin-row-meta{margin-top:12px; line-height:1.4; font-size:12.5px;}
+  #coinList.coin-list-as-list .btn-row{margin-top:10px; gap:8px; flex-wrap:wrap;}
   #coinList.coin-list-as-list .btn-row .btn-small{
     flex:1 1 0; min-width:105px; padding:12px 16px; font-size:14px; min-height:44px;
-    border-radius:14px; letter-spacing:0.1px;
+    border-radius:100px; letter-spacing:0.1px;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   #coinList.coin-list-as-list .badge{padding:6px 14px; font-size:13px;}
   #coinList.coin-list-as-list .coin-list-empty{padding:24px 0;}
+  .coin-row-chevron{display:none;}
+  #coinList.coin-list-as-list .coin-row-chevron{
+    display:flex; align-items:center; color:var(--text-secondary);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  #coinList.coin-list-as-list .coin-row-chevron svg{width:15px; height:15px;}
+  #coinList.coin-list-as-list .coin-row.expanded .coin-row-chevron{
+    transform:rotate(180deg); color:var(--pink-soft);
+  }
 
   /* ---------- drum picker ---------- */
   .drum-wrapper{ position:relative; height:154px; margin-bottom:20px; }
@@ -3032,6 +3078,51 @@ async function sbApplyDurationToActiveCoins(value, unit){
 function goHome(){ window.location.search = ""; }
 function goAdmin(){ window.location.search = "?admin=1"; }
 
+// Posiziona (con transizione CSS) la "pillola" scorrevole di un segmented
+// control sul pulsante attivo — usata sia dal filtro di stato che dal
+// selettore vista a schede/elenco.
+// Tiene la pillola dei segmented control allineata anche quando cambia lo
+// spazio disponibile (rotazione schermo, ridimensionamento finestra, caricamento
+// di un font che sposta leggermente il testo) — altrimenti resta larga/posizionata
+// secondo una misura ormai vecchia, sembrando "allungata" o storta.
+function setupSegmentedResizeSync(){
+  const realign = () => {
+    positionSegmentedThumb(document.getElementById("coinFilterSegmented"), true);
+    positionSegmentedThumb(document.getElementById("viewToggle"), true);
+  };
+  if(window.ResizeObserver){
+    const observer = new ResizeObserver(realign);
+    document.querySelectorAll(".segmented").forEach(el => observer.observe(el));
+  }else{
+    window.addEventListener("resize", realign);
+  }
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(realign);
+  }
+}
+
+function positionSegmentedThumb(container, instant){
+  if(!container) return;
+  const thumb = container.querySelector(".segmented-thumb");
+  const activeBtn = container.querySelector("button.active");
+  if(!thumb || !activeBtn) return;
+  if(instant) thumb.style.transition = "none";
+  thumb.style.width = activeBtn.offsetWidth + "px";
+  thumb.style.transform = `translateX(${activeBtn.offsetLeft - 4}px)`;
+  if(instant){
+    thumb.offsetHeight; // forza il browser ad applicare subito la posizione, senza animarla
+    thumb.style.transition = "";
+  }
+}
+
+// Chiude un popup con la stessa animazione di apertura ma al contrario
+// (dissolvenza + rimpicciolimento), invece di farlo sparire di scatto.
+function closeModal(overlay){
+  if(!overlay) return;
+  overlay.classList.add("closing");
+  setTimeout(() => overlay.remove(), 200);
+}
+
 function backButtonHtml(){
   return `<div class="back-btn" id="backBtn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -3044,10 +3135,10 @@ function attachBackButton(handler){
 
 // Header di pagina unificato: titolo sempre centrato e alla stessa altezza
 // di un eventuale pulsante indietro (a sinistra) o di azioni (a destra).
-function pageHeaderHtml(title, { showBack = false, rightHtml = "" } = {}){
+function pageHeaderHtml(title, { showBack = false, rightHtml = "", titleStyle = "" } = {}){
   return `<div class="page-header">
     <div class="page-header-side page-header-left">${showBack ? backButtonHtml() : ""}</div>
-    <h1 class="page-header-title" style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px">${title}</h1>
+    <h1 class="page-header-title" style="font-family:'SpaceAge', -apple-system, sans-serif; font-weight:400; letter-spacing:1px; ${titleStyle}">${title}</h1>
     <div class="page-header-side page-header-right">${rightHtml}</div>
   </div>`;
 }
@@ -3062,7 +3153,9 @@ const icons = {
   listView: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`,
   gridView: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
   refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>`,
-  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+  chevron: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`,
+  link: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
 };
 
 const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // esclude 0/O/1/I per evitare ambiguità
@@ -3183,7 +3276,7 @@ function showWelcomePopup(onOk){
     </div>`;
   document.body.appendChild(overlay);
   document.getElementById("welcomeOk").onclick = () => {
-    overlay.remove();
+    closeModal(overlay);
     if(onOk) onOk();
   };
 }
@@ -3419,13 +3512,14 @@ function renderAdmin(){
   }
 
   app.innerHTML = `
-    ${pageHeaderHtml("VirtualCoin", { rightHtml: `
+    <div class="card-enter">
+    ${pageHeaderHtml("Virtual<br>Coin", { rightHtml: `
       <span class="server-led" id="serverLed" title="Verifica stato server…"></span>
       <button type="button" class="icon-btn icon-btn-sm" id="reloadBtn" aria-label="Ricarica pagina">${icons.refresh}</button>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
-    ` })}
+    `, titleStyle: "font-size:19px;" })}
     <div class="duration-row">
-      <span class="duration-row-text">Durata default: <strong id="currentDurationDisplay">…</strong></span>
+      <span class="duration-row-text">Durata base : <strong id="currentDurationDisplay">…</strong></span>
       <button type="button" class="icon-btn" id="changeDurationBtn" aria-label="Modifica durata default">${icons.pencil}</button>
       <button type="button" class="stats-pill-btn" id="statsBtn">${icons.chart} Statistiche</button>
     </div>
@@ -3434,17 +3528,20 @@ function renderAdmin(){
     </div>
     <div class="list-controls-row">
       <div class="segmented" id="coinFilterSegmented">
+        <div class="segmented-thumb"></div>
         <button data-filter="all" class="active">Tutte</button>
         <button data-filter="active">Attive</button>
         <button data-filter="never">Mai usate</button>
         <button data-filter="expired">Scadute</button>
       </div>
       <div class="view-toggle" id="viewToggle">
+        <div class="segmented-thumb"></div>
         <button type="button" data-view="grid" class="active" aria-label="Vista a schede">${icons.gridView}</button>
         <button type="button" data-view="list" aria-label="Vista a elenco">${icons.listView}</button>
       </div>
     </div>
     <div id="coinList"></div>
+    </div>
   `;
 
   document.getElementById("logoutBtn").onclick = logout;
@@ -3456,6 +3553,7 @@ function renderAdmin(){
     btn.onclick = () => {
       document.querySelectorAll("#coinFilterSegmented button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
+      positionSegmentedThumb(document.getElementById("coinFilterSegmented"));
       renderFilteredCoinList();
     };
   });
@@ -3463,16 +3561,23 @@ function renderAdmin(){
     btn.onclick = () => {
       document.querySelectorAll("#viewToggle button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
+      positionSegmentedThumb(document.getElementById("viewToggle"));
       document.getElementById("coinList").classList.toggle("coin-list-as-list", btn.dataset.view === "list");
     };
   });
+  positionSegmentedThumb(document.getElementById("coinFilterSegmented"), true);
+  positionSegmentedThumb(document.getElementById("viewToggle"), true);
+  setupSegmentedResizeSync();
 
-  loadDefaultDuration();
   document.getElementById("changeDurationBtn").onclick = () => {
     openDurationPicker(currentDefaultValue || 60, currentDefaultUnit || "days");
   };
 
-  loadCoinList();
+  // Aspetto che la vera durata di default arrivi dal server PRIMA di disegnare
+  // la lista: altrimenti le coin mai attivate mostrerebbero per un attimo (o
+  // stabilmente, se la lista finiva di caricare per prima) il valore di
+  // partenza (60 giorni) invece di quello reale impostato in Supabase.
+  loadDefaultDuration().then(() => loadCoinList());
 }
 
 /* ============================================================
@@ -3620,7 +3725,7 @@ function openDurationPicker(currentValue, currentUnitPg){
   setActiveSegment(selectedUnit);
   buildDrum(selectedUnit, selectedValue);
 
-  document.getElementById("cancelDurationBtn").onclick = () => overlay.remove();
+  document.getElementById("cancelDurationBtn").onclick = () => closeModal(overlay);
   document.getElementById("confirmDurationBtn").onclick = async () => {
     const btn = document.getElementById("confirmDurationBtn");
     const pgUnit = SEGMENT_TO_PGUNIT[selectedUnit];
@@ -3631,7 +3736,7 @@ function openDurationPicker(currentValue, currentUnitPg){
       currentDefaultValue = selectedValue;
       currentDefaultUnit = pgUnit;
       document.getElementById("currentDurationDisplay").textContent = formatDurationDisplay(selectedValue, pgUnit);
-      overlay.remove();
+      closeModal(overlay);
 
       const hasActive = await sbHasActiveCoins();
       if(hasActive){
@@ -3667,11 +3772,11 @@ function showApplyScopeModal(onChoice){
     </div>`;
   document.body.appendChild(overlay);
   document.getElementById("applyBothBtn").onclick = async () => {
-    overlay.remove();
+    closeModal(overlay);
     await onChoice(true);
   };
   document.getElementById("applyFutureOnlyBtn").onclick = async () => {
-    overlay.remove();
+    closeModal(overlay);
     await onChoice(false);
   };
 }
@@ -3878,8 +3983,10 @@ function updateCalendarCard(activationsByDate){
 // dell'app, con pulsante indietro per tornare alla lista coin.
 async function renderStats(){
   app.innerHTML = `
-    ${pageHeaderHtml("Statistiche", { showBack: true })}
-    <div class="loading">Caricamento…</div>
+    <div class="card-enter">
+      ${pageHeaderHtml("Statistiche", { showBack: true })}
+      <div class="loading">Caricamento…</div>
+    </div>
   `;
   attachBackButton(renderAdmin);
 
@@ -3888,8 +3995,10 @@ async function renderStats(){
     coins = await sbSelectAllCoins();
   }catch(e){
     app.innerHTML = `
-      ${pageHeaderHtml("Statistiche", { showBack: true })}
-      <div class="error-text">Errore nel caricamento delle statistiche.</div>
+      <div class="card-enter">
+        ${pageHeaderHtml("Statistiche", { showBack: true })}
+        <div class="error-text">Errore nel caricamento delle statistiche.</div>
+      </div>
     `;
     attachBackButton(renderAdmin);
     return;
@@ -3903,29 +4012,31 @@ async function renderStats(){
   statsViewMonth = now.getMonth();
 
   app.innerHTML = `
-    ${pageHeaderHtml("Statistiche", { showBack: true })}
-    <div class="stats-grid">
-      <div class="stat-tile"><div class="stat-number" style="color:var(--green)">${s.active}</div><div class="stat-label">Attive ora</div></div>
-      <div class="stat-tile"><div class="stat-number">${s.thisWeek}</div><div class="stat-label">Attivate<br>questa settimana</div></div>
-      <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
-    </div>
-    <div class="stats-content">
-      <div class="stats-bestcards">
-        ${bestWeekText ? `
-        <div class="card stats-info-card">
-          <p class="field-label" style="margin-bottom:6px">Settimana con più attivazioni</p>
-          <p class="stats-info-value">${bestWeekText}</p>
-        </div>` : ""}
-        ${bestMonthText ? `
-        <div class="card stats-info-card">
-          <p class="field-label" style="margin-bottom:6px">Mese con più attivazioni</p>
-          <p class="stats-info-value">${bestMonthText}</p>
-        </div>` : ""}
+    <div class="card-enter">
+      ${pageHeaderHtml("Statistiche", { showBack: true })}
+      <div class="stats-grid">
+        <div class="stat-tile"><div class="stat-number" style="color:var(--green)">${s.active}</div><div class="stat-label">Attive ora</div></div>
+        <div class="stat-tile"><div class="stat-number">${s.thisWeek}</div><div class="stat-label">Attivate<br>questa settimana</div></div>
+        <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
       </div>
-      ${renderCalendarHtml(s.activationsByDate, statsViewYear, statsViewMonth)}
-      <div class="card stats-chart-card">
-        <p class="field-label" style="margin-bottom:10px">Attivazioni ultimi 14 giorni</p>
-        ${renderActivationsChartSvg(s.activationsByDate)}
+      <div class="stats-content">
+        <div class="stats-bestcards">
+          ${bestWeekText ? `
+          <div class="card stats-info-card">
+            <p class="field-label" style="margin-bottom:6px">Settimana con più attivazioni</p>
+            <p class="stats-info-value">${bestWeekText}</p>
+          </div>` : ""}
+          ${bestMonthText ? `
+          <div class="card stats-info-card">
+            <p class="field-label" style="margin-bottom:6px">Mese con più attivazioni</p>
+            <p class="stats-info-value">${bestMonthText}</p>
+          </div>` : ""}
+        </div>
+        ${renderCalendarHtml(s.activationsByDate, statsViewYear, statsViewMonth)}
+        <div class="card stats-chart-card">
+          <p class="field-label" style="margin-bottom:10px">Attivazioni ultimi 14 giorni</p>
+          ${renderActivationsChartSvg(s.activationsByDate)}
+        </div>
       </div>
     </div>
   `;
@@ -3972,6 +4083,16 @@ function renderFilteredCoinList(){
     return true;
   });
 
+  // Ordine: Attive prima, poi Mai usate, poi Scadute — così con il filtro
+  // "Tutte" selezionato la lista non risulta disordinata.
+  const statusRank = c => {
+    const expiry = effectiveExpiry(c);
+    if(!c.first_scan_at) return 1; // mai usata
+    if(expiry && now >= expiry) return 2; // scaduta
+    return 0; // attiva
+  };
+  coins = coins.slice().sort((a, b) => statusRank(a) - statusRank(b));
+
   if(!coins.length){
     listEl.innerHTML = `<div class="loading coin-list-empty">Nessuna VirtualCoin in questa categoria.</div>`;
     return;
@@ -3985,7 +4106,21 @@ function renderFilteredCoinList(){
     if(manualBtn) manualBtn.onclick = () => handleManualActivate(c);
     row.querySelector(".btn-unlock-device").onclick = () => handleUnlockDevice(c);
     row.querySelector(".btn-reset").onclick = () => handleReset(c);
-    row.querySelector(".btn-delete-coin").onclick = () => handleDeleteCoin(c);
+    row.querySelector(".btn-delete-coin").onclick = (e) => {
+      e.stopPropagation();
+      handleDeleteCoin(c);
+    };
+    row.querySelector(".btn-view-link").onclick = (e) => {
+      e.stopPropagation();
+      showCoinLinkPopup(c);
+    };
+    // In modalità elenco, la riga si espande/comprime al tap per mostrare
+    // data e pulsanti — in modalità schede resta sempre tutto visibile.
+    row.querySelector(".coin-row-top").onclick = () => {
+      if(document.getElementById("coinList").classList.contains("coin-list-as-list")){
+        row.classList.toggle("expanded");
+      }
+    };
   });
 }
 
@@ -4057,22 +4192,28 @@ function coinRowHtml(id, coin){
   <div class="coin-row" id="row-${cssId(id)}">
     <div class="coin-row-top">
       <div>
-        <div class="coin-row-id">${coin.session_code || fakeDisplayCode(id)}</div>
+        <div class="coin-row-id-row">
+          <span class="coin-row-id">${coin.session_code || fakeDisplayCode(id)}</span>
+          <button type="button" class="icon-btn icon-btn-xs btn-view-link" aria-label="Vedi link">${icons.link}</button>
+        </div>
         ${coin.label ? `<div class="coin-row-label">${coin.label}</div>` : ""}
       </div>
       <div class="coin-row-top-right">
         ${statusBadge(coin)}
+        <span class="coin-row-chevron">${icons.chevron}</span>
         <button type="button" class="icon-btn icon-btn-xs btn-delete-coin" aria-label="Elimina definitivamente">${icons.trash}</button>
       </div>
     </div>
-    <div class="coin-row-meta">
-      Attivata il: ${fmtDate(coin.first_scan_at)}<br>
-      Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: ${derivedDurationLabel(coin)}
-    </div>
-    <div class="btn-row">
-      ${!coin.first_scan_at ? `<button class="btn btn-secondary btn-small btn-manual-activate">Attiva senza NFC</button>` : ""}
-      <button class="btn btn-secondary btn-small btn-unlock-device">Sblocca dispositivo</button>
-      <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+    <div class="coin-row-details">
+      <div class="coin-row-meta">
+        Attivata il: ${fmtDate(coin.first_scan_at)}<br>
+        Scade il: ${expiry ? fmtDate(expiry.toISOString()) : "—"} · Durata: <strong class="coin-row-duration">${derivedDurationLabel(coin)}</strong>
+      </div>
+      <div class="btn-row">
+        ${!coin.first_scan_at ? `<button class="btn btn-secondary btn-small btn-manual-activate">Attiva senza NFC</button>` : ""}
+        <button class="btn btn-secondary btn-small btn-unlock-device">Cambio dispositivo</button>
+        <button class="btn btn-secondary btn-small btn-reset">Azzera</button>
+      </div>
     </div>
   </div>`;
 }
@@ -4105,25 +4246,27 @@ async function handleCreateCoin(){
   }
 }
 
-function showCoinLinkPopup(code){
-  const url = buildCoinUrl(code);
+function showCoinLinkPopup(coin){
+  const realUrl = buildCoinUrl(coin.id);
+  const displayCode = coin.session_code || fakeDisplayCode(coin.id);
+  const fakeUrl = buildCoinUrl(displayCode);
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.innerHTML = `
     <div class="modal-box">
       <p style="font-size:19px;font-weight:700;color:var(--text);margin:0 0 4px">Link VirtualCoin</p>
-      <p style="margin-bottom:14px">Copia e scrivi questo link sul tag NFC:</p>
-      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${url}</p>
+      <p style="margin-bottom:14px">Il link copiato funziona correttamente anche se qui sotto vedi il codice mostrato al cliente:</p>
+      <p style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;word-break:break-all;color:var(--text);text-align:left;border:1px solid var(--glass-border)">${fakeUrl}</p>
       <button class="btn btn-primary" id="copyExistingLinkBtn" style="margin-top:16px">Copia link</button>
       <button class="btn btn-secondary" id="closeExistingLinkPopup" style="margin-top:10px">Chiudi</button>
     </div>`;
   document.body.appendChild(overlay);
   document.getElementById("copyExistingLinkBtn").onclick = () => {
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(realUrl).then(() => {
       document.getElementById("copyExistingLinkBtn").textContent = "Copiato!";
     });
   };
-  document.getElementById("closeExistingLinkPopup").onclick = () => overlay.remove();
+  document.getElementById("closeExistingLinkPopup").onclick = () => closeModal(overlay);
 }
 
 function showGeneratedLinkPopup(code){
@@ -4147,7 +4290,7 @@ function showGeneratedLinkPopup(code){
       document.getElementById("copyLinkBtn").textContent = "Copiato!";
     });
   };
-  document.getElementById("closeLinkPopup").onclick = () => overlay.remove();
+  document.getElementById("closeLinkPopup").onclick = () => closeModal(overlay);
 }
 
 function handleReset(coin){
@@ -4206,12 +4349,12 @@ function showManualActivationPopup(coin){
       document.getElementById("copyManualActivationLinkBtn").textContent = "Copiato!";
     });
   };
-  document.getElementById("closeManualActivationPopup").onclick = () => overlay.remove();
+  document.getElementById("closeManualActivationPopup").onclick = () => closeModal(overlay);
 }
 
 function handleUnlockDevice(coin){
   const currentCode = coin.session_code || fakeDisplayCode(coin.id);
-  confirmAction(`Sbloccare il dispositivo collegato a "${currentCode}"? Il prossimo telefono che apre il link diventerà il nuovo proprietario della VirtualCoin (utile se il cliente ha cambiato telefono).`, async () => {
+  confirmAction(`Cambiare dispositivo per "${currentCode}"? Utile se il cliente ha cambiato telefono: il prossimo telefono che apre il link diventerà il nuovo proprietario della VirtualCoin.`, async () => {
     await sbUpdateCoin(coin.id, { device_id: null });
     loadCoinList();
   });
@@ -4229,9 +4372,9 @@ function confirmAction(message, onConfirm){
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  document.getElementById("modalCancel").onclick = () => closeModal(overlay);
   document.getElementById("modalConfirm").onclick = () => {
-    overlay.remove();
+    closeModal(overlay);
     onConfirm();
   };
 }
@@ -4260,10 +4403,10 @@ function confirmActionTyped(message, expectedCode, onConfirm){
     confirmBtn.disabled = !match;
     confirmBtn.style.opacity = match ? "1" : ".4";
   };
-  document.getElementById("modalCancel").onclick = () => overlay.remove();
+  document.getElementById("modalCancel").onclick = () => closeModal(overlay);
   confirmBtn.onclick = () => {
     if(confirmBtn.disabled) return;
-    overlay.remove();
+    closeModal(overlay);
     onConfirm();
   };
 }

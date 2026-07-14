@@ -3021,10 +3021,27 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000){
   }
 }
 const app = document.getElementById("app");
-const COIN_IMG = "images/coin.png";
-// Fallback mostrato se images/coin.png non viene trovata (percorso sbagliato,
-// file dimenticato nel repo): un semplice cerchio dorato al posto dell'icona
-// di immagine rotta, generato al volo senza bisogno di un altro file esterno.
+// Due varianti della moneta, entrambe WebP con la stessa proporzione 900x1021:
+// - images/coin.webp         (900x1021)  -> telefoni/tablet, dove il fix di
+//                                           resa su Chrome Android era stato tarato
+// - images/coin-desktop.webp (1800x2042) -> schermi larghi (PC), il doppio dei
+//                                           pixel per eliminare la sgranatura
+// La scelta avviene una volta al caricamento, con lo stesso breakpoint (820px)
+// già usato dal layout desktop a colonne.
+const COIN_IMG = window.matchMedia("(min-width: 820px)").matches
+  ? "images/coin-desktop.webp"
+  : "images/coin.webp";
+// Catena di ripiego se un file manca o il browser non legge la WebP:
+// WebP scelta -> images/coin.png -> cerchio dorato SVG generato al volo.
+const COIN_PNG_IMG = "images/coin.png";
+function coinImgFallback(img){
+  if(img.src.indexOf(".webp") !== -1){
+    img.src = COIN_PNG_IMG;
+  }else{
+    img.onerror = null;
+    img.src = COIN_FALLBACK_IMG;
+  }
+}
 const COIN_FALLBACK_IMG = "data:image/svg+xml;utf8," + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -3500,7 +3517,7 @@ function showWelcomePopup(onOk){
 function playCoinRevealAnimation(onDone){
   app.innerHTML = `<div class="coin-reveal">
     <div class="coin-reveal-stage">
-      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">
+      <img class="coin-reveal-img" id="coinRevealImg" src="${COIN_IMG}" alt="VirtualCoin" onerror="coinImgFallback(this)">
       <div class="coin-reveal-check">${icons.check}</div>
     </div>
     <p class="status-sub" style="margin:0">Verifica in corso…</p>
@@ -3667,8 +3684,8 @@ function renderActiveCard(coin, expiry, animated){
   // Contenuto del cerchio: se "animated" è true, parte dalla spunta e sfuma nella moneta;
   // se false (visite successive), la moneta è già visibile e ferma, senza animazioni.
   const iconInner = animated
-    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`
-    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="this.onerror=null;this.src=COIN_FALLBACK_IMG;">`;
+    ? `<span class="result-check">${icons.check}</span><img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" onerror="coinImgFallback(this)">`
+    : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="coinImgFallback(this)">`;
 
   app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">

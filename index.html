@@ -6,7 +6,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>NFC Coins</title>
+<title>Virtual Coin</title>
+<!-- Favicon: images/favicon.webp (512x512). Il browser lo scala da solo per
+     ogni contesto; apple-touch-icon copre l'icona su iPhone/iPad quando la
+     pagina viene aggiunta alla schermata Home. -->
+<link rel="icon" type="image/webp" href="images/favicon.webp">
+<link rel="apple-touch-icon" href="images/favicon.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
@@ -178,12 +183,11 @@
      grande del testo attorno e con il gradiente della testata. */
   .inline-brand{
     font-family:'VRGfont', -apple-system, sans-serif;
-    font-size:1.18em; letter-spacing:1.5px; white-space:nowrap;
-    background:linear-gradient(135deg, var(--pink), var(--purple-light));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-size:1.45em; letter-spacing:2px; white-space:nowrap;
+    color:#ffffff; display:inline-block; margin-top:6px;
   }
   .coin-status{text-align:center; padding:32px 0;}
-  .card.coin-status{padding:38px 30px;}
+  .card.coin-status{padding:44px 30px 40px;}
   .icon-circle{
     width:128px; height:128px; border-radius:50%; margin:0 auto 24px;
     display:flex; align-items:center; justify-content:center;
@@ -349,16 +353,23 @@
     margin:0 0 14px;
   }
   .duration-row-text{
-    display:inline-flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,0.07); border:1px solid var(--glass-border);
-    border-radius:100px; padding:11px 16px 11px 18px;
-    font-size:14px; color:var(--text-secondary); flex:0 1 auto; min-width:0;
+    display:inline-flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.09); border:1px solid var(--glass-border);
+    border-radius:100px; padding:13px 14px 13px 20px;
+    font-size:15.5px; color:var(--text-secondary); flex:0 1 auto; min-width:0;
     cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent;
     transition:transform .12s, opacity .12s;
   }
   .duration-row-text:active{transform:scale(0.97); opacity:.85;}
-  .duration-row-text strong{color:var(--text); font-weight:700;}
-  .duration-row-edit-icon{display:inline-flex; color:var(--pink-soft); opacity:0.85; flex-shrink:0;}
+  .duration-row-text strong{color:var(--text); font-weight:700; font-size:16.5px;}
+  /* Icona matita dentro un dischetto rosa: rende evidente che la durata
+     si può modificare toccando qui. */
+  .duration-row-edit-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:rgba(230,160,191,0.18); border:1px solid rgba(230,160,191,0.35);
+    color:var(--pink-soft);
+  }
   .duration-row-edit-icon svg{width:15px; height:15px;}
   .icon-btn{
     display:inline-flex; align-items:center; justify-content:center;
@@ -417,7 +428,7 @@
   .calendar-cell-empty{visibility:hidden;}
   .calendar-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .calendar-month-label{flex:1; text-align:center;}
-  .icon-btn-sm{width:46px; height:46px;}
+  .icon-btn-sm{width:52px; height:52px;}
   .icon-btn-xs{width:40px; height:40px;}
   .icon-btn-xs svg{width:17px; height:17px;}
   .coin-row-top-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
@@ -444,7 +455,7 @@
   .coin-overflow-item:active{background:rgba(255,255,255,0.08);}
   .coin-overflow-item-danger{color:var(--red);}
   .btn-delete-coin{color:var(--red); background:rgba(255,59,48,0.10); border-color:rgba(255,59,48,0.22);}
-  .icon-btn-sm svg{width:19px; height:19px;}
+  .icon-btn-sm svg{width:22px; height:22px;}
 
   /* ---------- grafico stile app Salute ---------- */
   .hc-segmented{margin-bottom:16px;}
@@ -460,6 +471,21 @@
   }
   .hc-bignum-unit{font-size:15px; font-weight:600; color:var(--text-secondary); margin-left:7px; letter-spacing:0;}
   .hc-avg{font-size:13.5px; color:var(--text-secondary); margin:4px 0 14px;}
+  .hc-chart-wrap{position:relative; padding-top:34px;}
+  .hc-tooltip{
+    position:absolute; top:0; left:0; z-index:5;
+    background:rgba(50,45,77,0.97); border:1px solid rgba(255,255,255,0.18);
+    border-radius:12px; padding:7px 12px; white-space:nowrap;
+    font-size:12.5px; color:var(--text-secondary); pointer-events:none;
+    box-shadow:0 8px 24px rgba(0,0,0,0.30);
+    will-change:transform; transition:transform .12s ease-out;
+  }
+  .hc-tooltip.hidden{display:none;}
+  .hc-tip-date{margin-right:8px; text-transform:capitalize;}
+  .hc-tip-count{font-weight:700; color:var(--text); font-size:14px;}
+  .hc-bar{transition:opacity .15s;}
+  .hc-bar-focus{opacity:1 !important;}
+  .hc-chart-wrap svg:hover .hc-bar:not(.hc-bar-focus){opacity:0.45;}
 
   /* ---------- layout pagina statistiche ---------- */
   .stats-content{display:flex; flex-direction:column; gap:16px;}
@@ -3711,7 +3737,7 @@ function renderActiveCard(coin, expiry, animated){
     : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="coinImgFallback(this)">`;
 
   app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
-    <p class="status-sub" style="margin:0 0 18px">Ecco la tua <span class="inline-brand">VIRTUAL COIN</span>!</p>
+    <p class="status-sub" style="margin:0 0 22px">Ecco la tua<br><span class="inline-brand">VIRTUAL COIN!</span></p>
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
       ${iconInner}
     </div>
@@ -4212,6 +4238,7 @@ function healthChartModel(range){
       bars.push({
         count: (statsChartData.activationsByMonth || {})[key] || 0,
         label: monthNames[d.getMonth()],
+        fullLabel: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
         isCurrent: i === 0
       });
     }
@@ -4224,14 +4251,18 @@ function healthChartModel(range){
     bars.push({
       count: statsChartData.activationsByDate[localDateKey(d)] || 0,
       label: range === "week" ? weekdayNames[d.getDay()] : String(d.getDate()),
+      fullLabel: d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" }),
       isCurrent: i === 0
     });
   }
   return { bars, unit: "giorno", labelEvery: range === "week" ? 1 : 5 };
 }
 
+let hcCurrentBars = []; // barre correnti, lette dal tooltip interattivo
+
 function renderHealthChartSvg(range){
   const { bars, unit, labelEvery } = healthChartModel(range);
+  hcCurrentBars = bars;
   const total = bars.reduce((a, b) => a + b.count, 0);
   const avg = total / bars.length;
   const maxCount = Math.max(1, ...bars.map(b => b.count));
@@ -4263,7 +4294,14 @@ function renderHealthChartSvg(range){
     const h = padT + chartH - y;
     const rx = Math.min(barW / 2, h / 2);
     const fill = b.isCurrent ? "url(#hcBarHot)" : "url(#hcBar)";
-    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fill}"/>`;
+    return `<rect class="hc-bar" data-i="${i}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fill}"/>`;
+  }).join("");
+
+  // Fasce invisibili a tutta altezza: rendono facile "prendere" ogni colonna
+  // col mouse o col dito, anche dove la barra è bassa o assente.
+  const hitBands = bars.map((b, i) => {
+    const x = padL + slot * i;
+    return `<rect class="hc-hit" data-i="${i}" x="${x.toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${height}" fill="transparent"/>`;
   }).join("");
 
   // Linea tratteggiata della media (solo se c'è almeno un dato)
@@ -4293,6 +4331,7 @@ function renderHealthChartSvg(range){
     ${barsSvg}
     ${avgLine}
     ${labels}
+    ${hitBands}
   </svg>` };
 }
 
@@ -4312,7 +4351,53 @@ function renderHealthChartCardInner(range){
     <p class="hc-kicker">ATTIVAZIONI · ${rangeText.toUpperCase()}</p>
     <p class="hc-bignum">${total}<span class="hc-bignum-unit">totali</span></p>
     <p class="hc-avg">${avgText}</p>
-    ${svg}`;
+    <div class="hc-chart-wrap">
+      <div class="hc-tooltip hidden" id="hcTooltip"></div>
+      ${svg}
+    </div>`;
+}
+
+// Tooltip in stile Salute: passando il mouse (o il dito) su una colonna
+// mostra la data completa e le attivazioni di quel giorno/mese.
+function attachChartTooltip(){
+  const wrap = document.querySelector(".hc-chart-wrap");
+  const tip = document.getElementById("hcTooltip");
+  if(!wrap || !tip) return;
+  const svg = wrap.querySelector("svg");
+  let currentI = -1;
+
+  function show(i, clientX){
+    const b = hcCurrentBars[i];
+    if(!b) return;
+    if(i !== currentI){
+      currentI = i;
+      tip.innerHTML = `<span class="hc-tip-date">${b.fullLabel}</span><span class="hc-tip-count">${b.count}</span> ${b.count === 1 ? "attivazione" : "attivazioni"}`;
+      // evidenzia la barra attiva
+      wrap.querySelectorAll(".hc-bar").forEach(r => r.classList.toggle("hc-bar-focus", r.dataset.i == i));
+    }
+    tip.classList.remove("hidden");
+    const wr = wrap.getBoundingClientRect();
+    const tw = tip.offsetWidth;
+    let x = clientX - wr.left - tw / 2;
+    x = Math.max(4, Math.min(x, wr.width - tw - 4));
+    tip.style.transform = `translate3d(${x}px, 0, 0)`;
+  }
+  function hide(){
+    currentI = -1;
+    tip.classList.add("hidden");
+    wrap.querySelectorAll(".hc-bar").forEach(r => r.classList.remove("hc-bar-focus"));
+  }
+  function handle(e){
+    const pt = e.touches ? e.touches[0] : e;
+    const el = document.elementFromPoint(pt.clientX, pt.clientY);
+    const band = el && el.closest ? el.closest("[data-i]") : null;
+    if(band){ show(Number(band.dataset.i), pt.clientX); }
+  }
+  svg.addEventListener("mousemove", handle);
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("touchstart", handle, { passive: true });
+  svg.addEventListener("touchmove", handle, { passive: true });
+  svg.addEventListener("touchend", hide);
 }
 
 function attachStatsRangeSegmented(){
@@ -4326,6 +4411,7 @@ function attachStatsRangeSegmented(){
       if(card){
         card.innerHTML = renderHealthChartCardInner(statsChartRange);
         attachStatsRangeSegmented();
+        attachChartTooltip();
       }
     };
   });
@@ -4426,6 +4512,7 @@ async function renderStats(){
   attachBackButton(renderAdmin);
   attachCalendarNav(s.activationsByDate);
   attachStatsRangeSegmented();
+  attachChartTooltip();
 }
 
 let allCoinsCache = [];

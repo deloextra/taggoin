@@ -693,19 +693,11 @@
   }
   .list-controls-row{display:flex; align-items:flex-start; gap:8px;}
   .list-controls-row .segmented{flex:1; margin-bottom:18px;}
-  .view-toggle-btn{align-self:center; margin-bottom:18px;}
   @keyframes viewTogglePop{
     0%{transform:rotate(-90deg) scale(0.7); opacity:0.4;}
     100%{transform:rotate(0deg) scale(1); opacity:1;}
   }
   .view-toggle-pop svg{animation:viewTogglePop .32s cubic-bezier(.34,1.56,.64,1) both; will-change:transform, opacity;}
-  /* Su schermi molto stretti il filtro prende tutta la riga e il bottone
-     vista scende sotto, a destra. */
-  @media (max-width: 460px){
-    .list-controls-row{flex-wrap:wrap;}
-    .list-controls-row .segmented{flex:1 1 100%; margin-bottom:10px;}
-    .view-toggle-btn{margin-left:auto; margin-bottom:16px;}
-  }
   .view-toggle{
     position:relative;
     display:flex; background:rgba(255,255,255,0.06); border-radius:100px;
@@ -3904,6 +3896,7 @@ function renderAdmin(){
   app.innerHTML = `
     <div class="card-enter">
     ${pageHeaderHtml("VIRTUAL COIN", { rightHtml: `
+      <button type="button" class="icon-btn icon-btn-sm" id="viewToggleBtn" aria-label="Passa alla vista a elenco" title="Cambia vista">${icons.listView}</button>
       <button type="button" class="icon-btn icon-btn-sm" id="statsBtn" aria-label="Statistiche">${icons.chart}</button>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
       <span class="server-led server-led-standalone" id="serverLed" title="Verifica stato server…"></span>
@@ -3917,15 +3910,12 @@ function renderAdmin(){
     <div class="top-actions">
       <button class="btn btn-primary" id="createCoinBtn">Genera nuova VirtualCoin</button>
     </div>
-    <div class="list-controls-row">
-      <div class="segmented" id="coinFilterSegmented">
-        <div class="segmented-thumb"></div>
-        <button data-filter="all" class="active">Tutte</button>
-        <button data-filter="active">Attive</button>
-        <button data-filter="never">Mai usate</button>
-        <button data-filter="expired">Scadute</button>
-      </div>
-      <button type="button" class="icon-btn view-toggle-btn" id="viewToggleBtn" aria-label="Passa alla vista a elenco" title="Cambia vista">${icons.listView}</button>
+    <div class="segmented" id="coinFilterSegmented">
+      <div class="segmented-thumb"></div>
+      <button data-filter="all" class="active">Tutte</button>
+      <button data-filter="active">Attive</button>
+      <button data-filter="never">Mai usate</button>
+      <button data-filter="expired">Scadute</button>
     </div>
     <div id="coinList"></div>
     </div>

@@ -438,6 +438,21 @@
   .btn-delete-coin{color:var(--red); background:rgba(255,59,48,0.10); border-color:rgba(255,59,48,0.22);}
   .icon-btn-sm svg{width:19px; height:19px;}
 
+  /* ---------- grafico stile app Salute ---------- */
+  .hc-segmented{margin-bottom:16px;}
+  .hc-segmented button{padding:11px 6px; font-size:13.5px;}
+  .hc-kicker{
+    font-size:12px; font-weight:700; letter-spacing:0.6px;
+    color:var(--text-secondary); margin:0 0 2px;
+  }
+  .hc-bignum{
+    font-size:34px; font-weight:700; color:var(--text);
+    margin:0; line-height:1.1; letter-spacing:-0.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .hc-bignum-unit{font-size:15px; font-weight:600; color:var(--text-secondary); margin-left:7px; letter-spacing:0;}
+  .hc-avg{font-size:13.5px; color:var(--text-secondary); margin:4px 0 14px;}
+
   /* ---------- layout pagina statistiche ---------- */
   .stats-content{display:flex; flex-direction:column; gap:16px;}
   .stats-bestcards{display:flex; flex-direction:column; gap:16px;}
@@ -449,8 +464,8 @@
       display:grid;
       grid-template-columns:1fr 1fr;
       grid-template-areas:
-        "calendar chart"
-        "calendar bestcards";
+        "chart calendar"
+        "bestcards calendar";
       gap:16px; align-items:start;
     }
     .stats-calendar-card{grid-area:calendar;}
@@ -3688,21 +3703,21 @@ function renderActiveCard(coin, expiry, animated){
     : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="coinImgFallback(this)">`;
 
   app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
+    <p class="status-sub" style="margin:0 0 18px">Ecco la tua VirtualCoin</p>
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
       ${iconInner}
     </div>
-    <p class="status-sub" style="margin-bottom:2px">Ecco la tua VirtualCoin</p>
     <p class="status-title status-title-futuristic">Attiva</p>
     <div class="date-block">
       <div class="date-row"><span>Attivata il</span><strong>${fmtDateTime(coin.first_scan_at)}</strong></div>
       <div class="date-row"><span>Scade il</span><strong>${fmtDateTime(expiry.toISOString())}</strong></div>
     </div>
-    <p class="note-text">Dopo la data di scadenza la VirtualCoin non sarà più utilizzabile.</p>
+    <p class="note-text">Dopo la data di scadenza la VirtualCoin <strong>non sarà più utilizzabile.</strong></p>
     <div class="coin-id">${coin.session_code || fakeDisplayCode(coin.id)}</div>
 
     <div class="section-divider"></div>
 
-    <p class="status-sub" style="margin-bottom:16px">Vivi un'esperienza indimenticabile: scopri le nostre avventure e prenota subito il tuo posto!</p>
+    <p class="status-sub" style="margin-bottom:24px">Vivi un'esperienza indimenticabile: scopri le nostre avventure e prenota subito il tuo posto!</p>
     <button class="btn btn-primary btn-compact btn-book" id="bookAdventureBtn">Prenota la tua avventura</button>
   </div>`;
 
@@ -4102,7 +4117,7 @@ function computeStats(coins){
 
   return {
     total: coins.length, active, neverUsed, expired, thisWeek, thisMonth,
-    activationsByDate, bestWeek, bestMonth,
+    activationsByDate, activationsByMonth, bestWeek, bestMonth,
     expiringSoon, pendingDevice, activationRate
   };
 }
@@ -4167,43 +4182,145 @@ function renderCalendarHtml(activationsByDate, year, month){
 
 // Grafico a linee delle attivazioni negli ultimi 14 giorni, con marcatori
 // dorati stile "moneta" sui singoli punti.
-function renderActivationsChartSvg(activationsByDate){
-  const days = [];
-  const now = new Date();
-  for(let i = 13; i >= 0; i--){
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    days.push({ date: d, count: activationsByDate[localDateKey(d)] || 0 });
-  }
+// Grafico attivazioni in stile app Salute di iOS: barre arrotondate,
+// linea tratteggiata della media, numero grande in alto e selettore
+// del periodo (Settimana / Mese / Anno).
+const STATS_RANGES = {
+  week:  { label: "S", days: 7 },
+  month: { label: "M", days: 30 },
+  year:  { label: "A" }
+};
+let statsChartRange = "week";
+let statsChartData = null; // { activationsByDate, activationsByMonth }
 
-  const maxCount = Math.max(1, ...days.map(d => d.count));
-  const width = 320, height = 150, padL = 8, padR = 8, padT = 14, padB = 24;
+function healthChartModel(range){
+  const now = new Date();
+  const bars = [];
+  if(range === "year"){
+    const monthNames = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+    for(let i = 11; i >= 0; i--){
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      bars.push({
+        count: (statsChartData.activationsByMonth || {})[key] || 0,
+        label: monthNames[d.getMonth()],
+        isCurrent: i === 0
+      });
+    }
+    return { bars, unit: "mese", labelEvery: 2 };
+  }
+  const days = STATS_RANGES[range].days;
+  const weekdayNames = ["D","L","M","M","G","V","S"];
+  for(let i = days - 1; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    bars.push({
+      count: statsChartData.activationsByDate[localDateKey(d)] || 0,
+      label: range === "week" ? weekdayNames[d.getDay()] : String(d.getDate()),
+      isCurrent: i === 0
+    });
+  }
+  return { bars, unit: "giorno", labelEvery: range === "week" ? 1 : 5 };
+}
+
+function renderHealthChartSvg(range){
+  const { bars, unit, labelEvery } = healthChartModel(range);
+  const total = bars.reduce((a, b) => a + b.count, 0);
+  const avg = total / bars.length;
+  const maxCount = Math.max(1, ...bars.map(b => b.count));
+
+  const width = 320, height = 168, padL = 6, padR = 34, padT = 10, padB = 22;
   const chartW = width - padL - padR;
   const chartH = height - padT - padB;
-  const stepX = chartW / (days.length - 1);
+  const slot = chartW / bars.length;
+  const barW = Math.min(slot * 0.55, 22);
+  const yFor = c => padT + chartH - (c / maxCount) * chartH;
 
-  const points = days.map((d, i) => ({
-    x: padL + i * stepX,
-    y: padT + chartH - (d.count / maxCount) * chartH,
-    ...d
-  }));
-
-  const polyline = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const gridLines = [0, 0.5, 1].map(f => {
-    const y = padT + chartH - f * chartH;
-    return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+  // Griglia orizzontale con i valori a destra, come in Salute
+  const gridVals = maxCount <= 2 ? [0, maxCount] : [0, Math.round(maxCount / 2), maxCount];
+  const grid = [...new Set(gridVals)].map(v => {
+    const y = yFor(v);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR + 4}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+      <text x="${width - 4}" y="${(y + 3).toFixed(1)}" font-size="9" fill="rgba(244,240,248,0.45)" text-anchor="end">${v}</text>`;
   }).join("");
-  const dayLabels = points.map((p, i) => {
-    if(i % 3 !== 0 && i !== points.length - 1) return "";
-    return `<text x="${p.x}" y="${height - 6}" font-size="8.5" fill="rgba(244,240,248,0.5)" text-anchor="middle">${p.date.getDate()}/${p.date.getMonth() + 1}</text>`;
-  }).join("");
-  const markers = points.map(p => `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#f4d78b" stroke="#b8860b" stroke-width="1.5"/>`).join("");
 
-  return `<svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; display:block;">
-    ${gridLines}
-    <polyline points="${polyline}" fill="none" stroke="#da739e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${markers}
-    ${dayLabels}
-  </svg>`;
+  // Barre: cime arrotondate, gradiente rosa; il periodo corrente più acceso,
+  // i valori a zero mostrano solo un piccolo segno alla base.
+  const barsSvg = bars.map((b, i) => {
+    const cx = padL + slot * i + slot / 2;
+    const x = cx - barW / 2;
+    if(b.count === 0){
+      return `<rect x="${x.toFixed(1)}" y="${(padT + chartH - 3).toFixed(1)}" width="${barW.toFixed(1)}" height="3" rx="1.5" fill="rgba(255,255,255,0.14)"/>`;
+    }
+    const y = yFor(b.count);
+    const h = padT + chartH - y;
+    const rx = Math.min(barW / 2, h / 2);
+    const fill = b.isCurrent ? "url(#hcBarHot)" : "url(#hcBar)";
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fill}"/>`;
+  }).join("");
+
+  // Linea tratteggiata della media (solo se c'è almeno un dato)
+  const avgLine = total > 0 ? (() => {
+    const y = yFor(avg);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR + 4}" y2="${y.toFixed(1)}" stroke="rgba(244,215,139,0.85)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  })() : "";
+
+  const labels = bars.map((b, i) => {
+    if(labelEvery > 1 && i % labelEvery !== 0 && !b.isCurrent) return "";
+    const cx = padL + slot * i + slot / 2;
+    const w = b.isCurrent ? "700" : "400";
+    const c = b.isCurrent ? "rgba(244,240,248,0.9)" : "rgba(244,240,248,0.5)";
+    return `<text x="${cx.toFixed(1)}" y="${height - 6}" font-size="9" font-weight="${w}" fill="${c}" text-anchor="middle">${b.label}</text>`;
+  }).join("");
+
+  return { total, avg, svg: `<svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; display:block;">
+    <defs>
+      <linearGradient id="hcBar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(230,160,191,0.85)"/><stop offset="100%" stop-color="rgba(194,89,127,0.75)"/>
+      </linearGradient>
+      <linearGradient id="hcBarHot" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e6a0bf"/><stop offset="100%" stop-color="#da739e"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    ${barsSvg}
+    ${avgLine}
+    ${labels}
+  </svg>` };
+}
+
+// Testata in stile Salute: etichetta piccola, numero grande, media del periodo.
+function renderHealthChartCardInner(range){
+  const { total, avg, svg } = renderHealthChartSvg(range);
+  const rangeText = range === "week" ? "Ultimi 7 giorni" : range === "month" ? "Ultimi 30 giorni" : "Ultimi 12 mesi";
+  const unitText = range === "year" ? "al mese" : "al giorno";
+  const avgText = total > 0 ? `Media <strong style="color:var(--text)">${(avg % 1 === 0 ? avg : avg.toFixed(1)).toString().replace(".", ",")}</strong> ${unitText}` : "Nessuna attivazione nel periodo";
+  return `
+    <div class="segmented hc-segmented" id="statsRangeSegmented">
+      <div class="segmented-thumb"></div>
+      <button type="button" data-range="week"${range === "week" ? ' class="active"' : ""}>Settimana</button>
+      <button type="button" data-range="month"${range === "month" ? ' class="active"' : ""}>Mese</button>
+      <button type="button" data-range="year"${range === "year" ? ' class="active"' : ""}>Anno</button>
+    </div>
+    <p class="hc-kicker">ATTIVAZIONI · ${rangeText.toUpperCase()}</p>
+    <p class="hc-bignum">${total}<span class="hc-bignum-unit">totali</span></p>
+    <p class="hc-avg">${avgText}</p>
+    ${svg}`;
+}
+
+function attachStatsRangeSegmented(){
+  const seg = document.getElementById("statsRangeSegmented");
+  if(!seg) return;
+  positionSegmentedThumb(seg, true);
+  seg.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => {
+      statsChartRange = btn.dataset.range;
+      const card = document.querySelector(".stats-chart-card");
+      if(card){
+        card.innerHTML = renderHealthChartCardInner(statsChartRange);
+        attachStatsRangeSegmented();
+      }
+    };
+  });
 }
 
 let statsViewYear = null;
@@ -4257,6 +4374,8 @@ async function renderStats(){
   }
 
   const s = computeStats(coins);
+  statsChartData = { activationsByDate: s.activationsByDate, activationsByMonth: s.activationsByMonth };
+  statsChartRange = "week";
   const bestWeekText = bestWeekLabel(s.bestWeek);
   const bestMonthText = bestMonthLabel(s.bestMonth);
   const now = new Date();
@@ -4271,13 +4390,15 @@ async function renderStats(){
         <div class="stat-tile"><div class="stat-number">${s.thisWeek}</div><div class="stat-label">Attivate<br>questa settimana</div></div>
         <div class="stat-tile"><div class="stat-number">${s.thisMonth}</div><div class="stat-label">Attivate<br>questo mese</div></div>
       </div>
-      <div class="stats-grid stats-grid-secondary">
+      <div class="stats-grid">
         <div class="stat-tile"><div class="stat-number">${s.total}</div><div class="stat-label">Totale<br>monete</div></div>
-        <div class="stat-tile"><div class="stat-number">${s.activationRate}%</div><div class="stat-label">Tasso di<br>attivazione</div></div>
         <div class="stat-tile"><div class="stat-number" style="color:${s.expiringSoon > 0 ? "#ff9f0a" : "var(--text)"}">${s.expiringSoon}</div><div class="stat-label">In scadenza<br>(7 giorni)</div></div>
         <div class="stat-tile"><div class="stat-number" style="color:${s.pendingDevice > 0 ? "#ff9f0a" : "var(--text)"}">${s.pendingDevice}</div><div class="stat-label">In attesa di<br>dispositivo</div></div>
       </div>
       <div class="stats-content">
+        <div class="card stats-chart-card">
+          ${renderHealthChartCardInner(statsChartRange)}
+        </div>
         <div class="stats-bestcards">
           ${bestWeekText ? `
           <div class="card stats-info-card">
@@ -4291,15 +4412,12 @@ async function renderStats(){
           </div>` : ""}
         </div>
         ${renderCalendarHtml(s.activationsByDate, statsViewYear, statsViewMonth)}
-        <div class="card stats-chart-card">
-          <p class="field-label" style="margin-bottom:10px">Attivazioni ultimi 14 giorni</p>
-          ${renderActivationsChartSvg(s.activationsByDate)}
-        </div>
       </div>
     </div>
   `;
   attachBackButton(renderAdmin);
   attachCalendarNav(s.activationsByDate);
+  attachStatsRangeSegmented();
 }
 
 let allCoinsCache = [];

@@ -174,6 +174,14 @@
   }
   .page-header-side{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
 
+  /* Marchio "VIRTUAL COIN" dentro una frase: font brand, leggermente più
+     grande del testo attorno e con il gradiente della testata. */
+  .inline-brand{
+    font-family:'VRGfont', -apple-system, sans-serif;
+    font-size:1.18em; letter-spacing:1.5px; white-space:nowrap;
+    background:linear-gradient(135deg, var(--pink), var(--purple-light));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
   .coin-status{text-align:center; padding:32px 0;}
   .card.coin-status{padding:38px 30px;}
   .icon-circle{
@@ -3703,7 +3711,7 @@ function renderActiveCard(coin, expiry, animated){
     : `<img class="result-coin-static" src="${COIN_IMG}" alt="VirtualCoin" style="opacity:1;animation:none;" onerror="coinImgFallback(this)">`;
 
   app.innerHTML = `<div class="card coin-status${animated ? " card-enter" : ""}">
-    <p class="status-sub" style="margin:0 0 18px">Ecco la tua VirtualCoin</p>
+    <p class="status-sub" style="margin:0 0 18px">Ecco la tua <span class="inline-brand">VIRTUAL COIN</span>!</p>
     <div class="icon-circle result-icon" style="background:rgba(52,199,89,0.15);color:var(--green)">
       ${iconInner}
     </div>
@@ -3760,14 +3768,14 @@ function renderAdmin(){
 
   app.innerHTML = `
     <div class="card-enter">
-    ${pageHeaderHtml("Virtual<br>Coin", { rightHtml: `
+    ${pageHeaderHtml("VIRTUAL COIN", { rightHtml: `
       <button type="button" class="icon-btn icon-btn-sm btn-reload-status" id="reloadBtn" aria-label="Ricarica pagina">
         ${icons.refresh}
         <span class="server-led" id="serverLed" title="Verifica stato server…"></span>
       </button>
       <button type="button" class="icon-btn icon-btn-sm" id="statsBtn" aria-label="Statistiche">${icons.chart}</button>
       <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
-    `, titleStyle: "font-size:19px;" })}
+    `, titleStyle: "font-size:23px; letter-spacing:2.5px; white-space:nowrap; background:linear-gradient(135deg, var(--pink), var(--purple-light)); -webkit-background-clip:text; background-clip:text; color:transparent;" })}
     <div class="duration-row">
       <button type="button" class="duration-row-text" id="changeDurationBtn">
         Durata base :&nbsp;&nbsp;<strong id="currentDurationDisplay">…</strong>

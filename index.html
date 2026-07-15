@@ -560,7 +560,14 @@
   /* LED stato server da solo nell'header, accanto a "Esci": un piccolo
      respiro luminoso quando è tutto ok, fermo e rosso se il server non
      risponde. */
-  .server-led-standalone{margin-left:2px; align-self:center;}
+  .server-led-standalone{margin-left:10px; display:inline-block; vertical-align:middle;}
+  .admin-header{margin-bottom:20px;}
+  .admin-title{
+    font-family:'VRGfont', -apple-system, sans-serif;
+    font-size:19px; letter-spacing:1.2px; color:#ffffff;
+    text-align:center; margin:0 0 14px; white-space:nowrap;
+  }
+  .admin-actions{display:flex; align-items:center; justify-content:center; gap:10px;}
   @keyframes ledBreath{
     0%,100%{opacity:1;}
     50%{opacity:0.55;}
@@ -3895,12 +3902,14 @@ function renderAdmin(){
 
   app.innerHTML = `
     <div class="card-enter">
-    ${pageHeaderHtml("VIRTUAL COIN", { rightHtml: `
-      <button type="button" class="icon-btn icon-btn-sm" id="viewToggleBtn" aria-label="Passa alla vista a elenco" title="Cambia vista">${icons.listView}</button>
-      <button type="button" class="icon-btn icon-btn-sm" id="statsBtn" aria-label="Statistiche">${icons.chart}</button>
-      <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
-      <span class="server-led server-led-standalone" id="serverLed" title="Verifica stato server…"></span>
-    `, titleStyle: "font-size:19px; letter-spacing:1.2px; white-space:nowrap; color:#ffffff;" })}
+    <div class="admin-header">
+      <p class="admin-title">VIRTUAL COIN<span class="server-led server-led-standalone" id="serverLed" title="Verifica stato server…"></span></p>
+      <div class="admin-actions">
+        <button type="button" class="icon-btn icon-btn-sm" id="viewToggleBtn" aria-label="Passa alla vista a elenco" title="Cambia vista">${icons.listView}</button>
+        <button type="button" class="icon-btn icon-btn-sm" id="statsBtn" aria-label="Statistiche">${icons.chart}</button>
+        <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
+      </div>
+    </div>
     <div class="duration-row">
       <button type="button" class="duration-row-text" id="changeDurationBtn">
         Durata base :&nbsp;&nbsp;<strong id="currentDurationDisplay">…</strong>

@@ -561,13 +561,21 @@
      respiro luminoso quando è tutto ok, fermo e rosso se il server non
      risponde. */
   .server-led-standalone{margin-left:10px; display:inline-block; vertical-align:middle;}
-  .admin-header{margin-bottom:20px;}
+  .admin-header{margin-bottom:20px; overflow:visible;}
   .admin-title{
     font-family:'VRGfont', -apple-system, sans-serif;
-    font-size:19px; letter-spacing:1.2px; color:#ffffff;
-    text-align:center; margin:0 0 14px; white-space:nowrap;
+    /* scala col viewport: mai più largo dello schermo, niente overflow
+       orizzontale che spingeva i comandi (e "Esci") oltre il bordo */
+    font-size:clamp(14px, 5vw, 19px);
+    letter-spacing:1.2px; color:#ffffff;
+    text-align:center; margin:0 0 14px;
+    white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
   }
-  .admin-actions{display:flex; align-items:center; justify-content:center; gap:10px;}
+  .admin-actions{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    flex-wrap:wrap; max-width:100%;
+  }
+  .admin-actions .btn-small{flex:0 0 auto; white-space:nowrap;}
   @keyframes ledBreath{
     0%,100%{opacity:1;}
     50%{opacity:0.55;}

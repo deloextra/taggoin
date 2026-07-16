@@ -561,21 +561,57 @@
      respiro luminoso quando è tutto ok, fermo e rosso se il server non
      risponde. */
   .server-led-standalone{margin-left:10px; display:inline-block; vertical-align:middle;}
-  .admin-header{margin-bottom:20px; overflow:visible;}
+  /* Header admin su una riga: titolo+LED a sinistra, menu ⋯ ed Esci a
+     destra. Il menu raccoglie le azioni secondarie, in stile iOS. */
+  .admin-header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-bottom:20px; min-height:52px;
+  }
   .admin-title{
     font-family:'VRGfont', -apple-system, sans-serif;
-    /* scala col viewport: mai più largo dello schermo, niente overflow
-       orizzontale che spingeva i comandi (e "Esci") oltre il bordo */
-    font-size:clamp(14px, 5vw, 19px);
+    font-size:clamp(14px, 4.6vw, 19px);
     letter-spacing:1.2px; color:#ffffff;
-    text-align:center; margin:0 0 14px;
-    white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
+    margin:0; flex:1 1 auto; min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .admin-actions{
-    display:flex; align-items:center; justify-content:center; gap:10px;
-    flex-wrap:wrap; max-width:100%;
+  .admin-actions{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
+  .admin-actions .btn-small{white-space:nowrap;}
+
+  /* ---------- menu a tendina stile iOS ---------- */
+  .ios-menu-anchor{position:relative;}
+  .ios-menu{
+    position:absolute; top:calc(100% + 8px); right:0; z-index:60;
+    min-width:224px; overflow:hidden;
+    background:rgba(58,52,89,0.85);
+    backdrop-filter:blur(28px) saturate(170%);
+    -webkit-backdrop-filter:blur(28px) saturate(170%);
+    border:1px solid rgba(255,255,255,0.16);
+    border-radius:14px;
+    box-shadow:0 14px 40px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.10);
+    transform-origin:top right;
+    animation:iosMenuIn .26s cubic-bezier(.34,1.4,.64,1) both;
+    will-change:transform, opacity;
   }
-  .admin-actions .btn-small{flex:0 0 auto; white-space:nowrap;}
+  .ios-menu.ios-menu-closing{animation:iosMenuOut .14s ease both;}
+  @keyframes iosMenuIn{
+    from{transform:scale(0.6); opacity:0;}
+    to{transform:scale(1); opacity:1;}
+  }
+  @keyframes iosMenuOut{
+    from{transform:scale(1); opacity:1;}
+    to{transform:scale(0.9); opacity:0;}
+  }
+  .ios-menu-item{
+    display:flex; align-items:center; justify-content:space-between; gap:28px;
+    width:100%; padding:14px 16px; background:none; border:none;
+    font-family:inherit; font-size:16px; color:var(--text); text-align:left;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition:background .12s;
+  }
+  .ios-menu-item:active{background:rgba(255,255,255,0.10);}
+  .ios-menu-item + .ios-menu-item{border-top:1px solid rgba(255,255,255,0.09);}
+  .ios-menu-item-icon{display:inline-flex; color:var(--text-secondary); flex-shrink:0;}
+  .ios-menu-item-icon svg{width:19px; height:19px;}
   @keyframes ledBreath{
     0%,100%{opacity:1;}
     50%{opacity:0.55;}
@@ -3913,8 +3949,19 @@ function renderAdmin(){
     <div class="admin-header">
       <p class="admin-title">VIRTUAL COIN<span class="server-led server-led-standalone" id="serverLed" title="Verifica stato server…"></span></p>
       <div class="admin-actions">
-        <button type="button" class="icon-btn icon-btn-sm" id="viewToggleBtn" aria-label="Passa alla vista a elenco" title="Cambia vista">${icons.listView}</button>
-        <button type="button" class="icon-btn icon-btn-sm" id="statsBtn" aria-label="Statistiche">${icons.chart}</button>
+        <div class="ios-menu-anchor">
+          <button type="button" class="icon-btn icon-btn-sm" id="adminMenuBtn" aria-label="Altre azioni" aria-haspopup="menu">${icons.more}</button>
+          <div class="ios-menu hidden" id="adminMenu" role="menu">
+            <button type="button" class="ios-menu-item" id="menuViewToggle" role="menuitem">
+              <span id="menuViewLabel">Vista a elenco</span>
+              <span class="ios-menu-item-icon" id="menuViewIcon">${icons.listView}</span>
+            </button>
+            <button type="button" class="ios-menu-item" id="menuStats" role="menuitem">
+              <span>Statistiche</span>
+              <span class="ios-menu-item-icon">${icons.chart}</span>
+            </button>
+          </div>
+        </div>
         <button class="btn btn-secondary btn-small" id="logoutBtn">Esci</button>
       </div>
     </div>
@@ -3941,20 +3988,45 @@ function renderAdmin(){
   document.getElementById("logoutBtn").onclick = logout;
   checkServerStatus();
   document.getElementById("createCoinBtn").onclick = handleCreateCoin;
-  document.getElementById("statsBtn").onclick = renderStats;
   // Cambio vista: un solo bottone tondo, come gli altri comandi dell'app.
   // L'icona mostra la vista a cui si passerà; al tocco ruota dolcemente.
-  const vtBtn = document.getElementById("viewToggleBtn");
-  vtBtn.onclick = () => {
+  // Menu a tendina in stile iOS: si apre dal bottone ⋯ con una molla
+  // morbida (origine nell'angolo del bottone), si chiude toccando fuori,
+  // scegliendo una voce o riaprendo il bottone.
+  const menuBtn = document.getElementById("adminMenuBtn");
+  const menu = document.getElementById("adminMenu");
+
+  function closeAdminMenu(){
+    if(menu.classList.contains("hidden")) return;
+    menu.classList.add("ios-menu-closing");
+    setTimeout(() => {
+      menu.classList.add("hidden");
+      menu.classList.remove("ios-menu-closing");
+    }, 140);
+    document.removeEventListener("pointerdown", outsideClose, true);
+  }
+  function outsideClose(e){
+    if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeAdminMenu();
+  }
+  menuBtn.onclick = () => {
+    if(menu.classList.contains("hidden")){
+      menu.classList.remove("hidden");
+      document.addEventListener("pointerdown", outsideClose, true);
+    }else{
+      closeAdminMenu();
+    }
+  };
+
+  document.getElementById("menuViewToggle").onclick = () => {
     const list = document.getElementById("coinList");
     const toList = !list.classList.contains("coin-list-as-list");
     list.classList.toggle("coin-list-as-list", toList);
-    vtBtn.innerHTML = toList ? icons.gridView : icons.listView;
-    vtBtn.setAttribute("aria-label", toList ? "Passa alla vista a schede" : "Passa alla vista a elenco");
-    vtBtn.classList.remove("view-toggle-pop");
-    void vtBtn.offsetWidth; // riavvia l'animazione
-    vtBtn.classList.add("view-toggle-pop");
+    // La voce del menu descrive sempre la vista a cui si passerà
+    document.getElementById("menuViewLabel").textContent = toList ? "Vista a schede" : "Vista a elenco";
+    document.getElementById("menuViewIcon").innerHTML = toList ? icons.gridView : icons.listView;
+    closeAdminMenu();
   };
+  document.getElementById("menuStats").onclick = () => { closeAdminMenu(); renderStats(); };
   positionSegmentedThumb(document.getElementById("coinFilterSegmented"), true);
   setupSegmentedResizeSync();
   makeSegmentedDraggable(document.getElementById("coinFilterSegmented"), () => renderFilteredCoinList());
